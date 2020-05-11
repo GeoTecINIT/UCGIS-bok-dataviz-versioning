@@ -1,0 +1,26 @@
+{
+  "name": "@eo4geo/find-in-bok-dataviz",
+  "version": "2.1.0",
+  "description": "Parse the BOKWiki JSON-LD to a collection of nodes and represent them in a D3 circle packing graph",
+  "main": "index.js",
+  "dependencies": {
+    "d3": "^5.9.2"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "jsonld",
+    "parse",
+    "bok",
+    "Body of Knowledge",
+    "circle packing",
+    "eo4geo"
+  ],
+  "author": "Claudia Perez <clperez@uji.es>",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/GeoTecINIT/EO4GEO-find-in-bok-dataviz-versioning"
+  }
+}
