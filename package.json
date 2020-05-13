@@ -1,6 +1,6 @@
 {
   "name": "@eo4geo/find-in-bok-dataviz",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "Parse the BOKWiki JSON-LD to a collection of nodes and represent them in a D3 circle packing graph",
   "main": "index.js",
   "dependencies": {
