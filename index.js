@@ -205,7 +205,6 @@ exports.parseBOKData = function (bokJSON) {
     newNode.sourceDocuments = [];
     newNode.parent = null;
     namehash[bokJSON.concepts[n].code] = newNode.name;
-    colorhash[bokJSON.concepts[n].code.substring(0, 2)] = 0;
     allNodes.push(newNode);
   }
 
