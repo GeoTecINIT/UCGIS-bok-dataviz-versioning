@@ -20,19 +20,22 @@ If you want to show also the textual information, place a div and give it an id.
 <div id="textInfo"></div>
 ```
 
-In Javascript call the function visualizeBOKData( svgID, jsonFile, textID, numVersion, oldVersion)
+In Javascript call the function visualizeBOKData(svgId, url, textId, numVersion, oldVersion, textToAlert, yearCurrentVersion, yearVersion)
+
 
 - svgID : is the id you gave to the element in the HTML you want to display the graph
-- jsonFile : is the location of the json file. You can download it from releases
+- url : is the location BD
 - textID : is the id you gave to the div for the textual information
 - numVersion : the number of the current version from database
 - oldVersion : the number of an old version from database
+- textToAlert : 'orage' or 'red' for alert color
 
 
 ```javascript
 import * as bok from '@eo4geo/find-in-bok-dataviz';
 [...]
-bok.visualizeBOKData('#bubbles', 'assets/saved-bok.json', '#textInfo', 1, null) // will render the graphical view and the textual view from the version 1 in database
+
+bok.visualizeBOKData('#bubbles', 'https://eo4geo-uji.firebaseio.com/', '#textInfo', 1, , 1, 'orage', '2019', '2016') // will render the graphical view and the textual view from the version 1 in database
 
 ```
 
