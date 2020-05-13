@@ -169,7 +169,28 @@ exports.parseBOKData = function (bokJSON) {
 
   var allNodes = [];
   var namehash = {};
-  var colorhash = {};
+  var colorhash = {
+    GI: "#40e0d0",
+    IP: "#1f77b4",
+    CF: "#aec7e8",
+    CV: "#ff7f0e",
+    DA: "#ffbb78",
+    DM: "#2ca02c",
+    DN: "#98df8a",
+    PS: "#d62728",
+    GD: "#cc5b59",
+    GS: "#9467bd",
+    AM: "#8c564b",
+    MD: "#8c564b",
+    OI: "#c49c94",
+    GC: "#e377c2",
+    PP: "#f7b6d2",
+    SD: "#7f7f7f",
+    SH: "#c7c7c7",
+    TA: "#bcbd22",
+    WB: "#07561e",
+    no: "#17becf"
+  };
 
   // loop all nodes
   for (var n = 0; n < bokJSON.concepts.length; n++) {
@@ -220,12 +241,6 @@ exports.parseBOKData = function (bokJSON) {
     }
   }
 
-  var i = 0;
-  for (var key in colorhash) {
-    colorhash[key] = i;
-    i++;
-  }
-
   var cD3N = new CostumD3NodeCollection();
   for (var i in allNodes) {
     cD3N.add(allNodes[i]);
@@ -241,18 +256,18 @@ exports.parseBOKData = function (bokJSON) {
 
 };
 
-exports.visualizeBOKData = function (svgId, url, textId, numVersion, oldVersion, textToAlert , yearCurrentVersion, yearVersion) {
+exports.visualizeBOKData = function (svgId, url, textId, numVersion, oldVersion, textToAlert, yearCurrentVersion, yearVersion) {
   var codSelected = "GIST";
   var currentVersion = numVersion;
   var isAnOldVersion = false;
   var isAnObsoleteId = false;
   var yearCurrentVersion = yearCurrentVersion;
   var yearVersion = yearVersion;
-  if ( oldVersion !== null && numVersion != oldVersion &&  textToAlert == 'red'){
+  if (oldVersion !== null && numVersion != oldVersion && textToAlert == 'red') {
     numVersion = oldVersion;
     isAnOldVersion = true;
   }
-  if( textToAlert == 'orange'){
+  if (textToAlert == 'orange') {
     numVersion = oldVersion;
     isAnObsoleteId = true;
   }
@@ -329,11 +344,11 @@ exports.visualizeBOKData = function (svgId, url, textId, numVersion, oldVersion,
       })
       .style("fill", function (d) {
         if (d.depth == 1) {
-          return colorPalette(dataAndFunctions.colorhash[d.data.nameShort.substring(0, 2)]);
+          return dataAndFunctions.colorhash[d.data.nameShort.substring(0, 2)] ? dataAndFunctions.colorhash[d.data.nameShort.substring(0, 2)] : dataAndFunctions.colorhash['no'];
         } else if (d.depth == 2) {
-          return colorPalette(dataAndFunctions.colorhash[d.parent.data.nameShort.substring(0, 2)]);
+          return dataAndFunctions.colorhash[d.parent.data.nameShort.substring(0, 2)] ? dataAndFunctions.colorhash[d.parent.data.nameShort.substring(0, 2)] : dataAndFunctions.colorhash['no'];
         } else if (d.depth >= 3) {
-          return colorPalette(dataAndFunctions.colorhash[d.parent.parent.data.nameShort.substring(0, 2)]);
+          return dataAndFunctions.colorhash[d.parent.parent.data.nameShort.substring(0, 2)] ? dataAndFunctions.colorhash[d.parent.parent.data.nameShort.substring(0, 2)] : dataAndFunctions.colorhash['no'];
         } else {
           return "turquoise";
         }
@@ -462,21 +477,21 @@ exports.visualizeBOKData = function (svgId, url, textId, numVersion, oldVersion,
       titleNode.id = "boktitle";
       titleNode.attributes = "#boktitle";
       titleNode.innerHTML = "[" + d.nameShort + "] " + d.name; //display Name and shortcode of concept:
-      window.history.pushState("object or string", "Find In Bok", "/"+ d.nameShort);
+      window.history.pushState("object or string", "Find In Bok", "/" + d.nameShort);
       var pNode = document.createElement("p");
       pNode.innerHTML = "Permalink: <a href= 'https://bok.eo4geo.eu/" + d.nameShort + "'> https://bok.eo4geo.eu/" + d.nameShort + "</a>";
       mainNode.appendChild(pNode);
 
       mainNode.appendChild(titleNode);
-      if ( isAnOldVersion ){
+      if (isAnOldVersion) {
         const obsNode = document.createElement('p');
         let textObs = '';
-        let currentLink =  "<a style='color: red; font-weight: normal; cursor: pointer; text-decoration: underline;' href='https://bok.eo4geo.eu/'> the current version of the BoK </a>"
-        textObs += '<span style="color: red; font-weight: normal;">warning: this is an obsolete BoK concept - this concept is no longer present in ' +currentLink + '</span>';
+        let currentLink = "<a style='color: red; font-weight: normal; cursor: pointer; text-decoration: underline;' href='https://bok.eo4geo.eu/'> the current version of the BoK </a>"
+        textObs += '<span style="color: red; font-weight: normal;">warning: this is an obsolete BoK concept - this concept is no longer present in ' + currentLink + '</span>';
         obsNode.innerHTML = textObs;
         mainNode.appendChild(obsNode);
 
-      } else if ( isAnObsoleteId ){
+      } else if (isAnObsoleteId) {
         const obsNode = document.createElement('p');
         let textObs = '';
         textObs += '<span style="color: orange; font-weight: normal;">warning: this is old version of this BoK concept; see “\Versioning”\ below for more recent version(s)</span>';
@@ -523,7 +538,7 @@ exports.visualizeBOKData = function (svgId, url, textId, numVersion, oldVersion,
       } else
         infoNode.innerHTML = "";
 
-      window.history.pushState("object or string", "Find In Bok", "/"+ d.nameShort);
+      window.history.pushState("object or string", "Find In Bok", "/" + d.nameShort);
 
       //display description of subconcepts (if any):
       displayOrderedList(d.children, "name", "Subconcepts", infoNode, "boksubconcepts");
@@ -543,7 +558,7 @@ exports.visualizeBOKData = function (svgId, url, textId, numVersion, oldVersion,
       //display source documents of concept (if any):
       displayUnorderedList(d.sourceDocuments, "url", "Source documents", infoNode, "boksource");
 
-      displayVersions(d.nameShort, infoNode, numVersion, yearVersion );
+      displayVersions(d.nameShort, infoNode, numVersion, yearVersion);
 
       mainNode.appendChild(infoNode);
 
@@ -598,16 +613,16 @@ exports.visualizeBOKData = function (svgId, url, textId, numVersion, oldVersion,
     //	domElement.innerHTML = "";
   };
 
-  displayVersions = function ( code, domElement, cVersion, year ) {
+  displayVersions = function (code, domElement, cVersion, year) {
     let textCurrent = "";
     let currentLink = "";
     let yearToshow = year;
-    if ( cVersion == currentVersion ){
+    if (cVersion == currentVersion) {
       textCurrent = '(Current Bok Version)';
       yearToshow = yearCurrentVersion;
-    } else if (isAnOldVersion ){
-      currentLink =  '<a style="color: red; font-weight: normal; cursor: pointer; text-decoration: underline;" href="https://bok.eo4geo.eu/" > the current version of the BoK </a>'
-      textCurrent = '- <span style="color: red; font-weight: normal;">warning: this is an obsolete BoK concept - this concept is no longer present in ' +currentLink + '</span>';
+    } else if (isAnOldVersion) {
+      currentLink = '<a style="color: red; font-weight: normal; cursor: pointer; text-decoration: underline;" href="https://bok.eo4geo.eu/" > the current version of the BoK </a>'
+      textCurrent = '- <span style="color: red; font-weight: normal;">warning: this is an obsolete BoK concept - this concept is no longer present in ' + currentLink + '</span>';
     } else {
       textCurrent = '- <span style="color: orange; font-weight: normal;">warning: this is old version of this BoK concept; more recent versions are listed above</span>';;
     }
@@ -617,52 +632,52 @@ exports.visualizeBOKData = function (svgId, url, textId, numVersion, oldVersion,
     var text = "";
     text += "";
     text += '<h5>Versioning </h5><div id="oldVersions" style="text-indent: 2em;">';
-    if( currentCod == 'GIST') currentCod = '';
-    if ( isAnObsoleteId ) text += '- <a href="https://bok.eo4geo.eu/'+ currentCod +'">version ' + currentVersion + '.0 ('+ yearCurrentVersion + ') (Current Bok Version)</a>';
-    text += '<p style="font-weight: bold;" >&rarr; You are viewing: version ' + cVersion + '.0 ('+ yearToshow + ') '+ textCurrent +' </p>';
-    if (isAnObsoleteId ) searchOldVersions ( code, domElement, currentVersion - 1, cVersion );
+    if (currentCod == 'GIST') currentCod = '';
+    if (isAnObsoleteId) text += '- <a href="https://bok.eo4geo.eu/' + currentCod + '">version ' + currentVersion + '.0 (' + yearCurrentVersion + ') (Current Bok Version)</a>';
+    text += '<p style="font-weight: bold;" >&rarr; You are viewing: version ' + cVersion + '.0 (' + yearToshow + ') ' + textCurrent + ' </p>';
+    if (isAnObsoleteId) searchOldVersions(code, domElement, currentVersion - 1, cVersion);
     else {
-      searchOldVersions ( code, domElement, cVersion -1, null );
+      searchOldVersions(code, domElement, cVersion - 1, null);
     }
     text += '</div>';
     domElement.innerHTML += text;
   }
 
-  visualizeOldBokData = function (version , year ) {
+  visualizeOldBokData = function (version, year) {
     let mainNode = document.getElementById('bubbles');
     mainNode.innerHTML = "";
-    exports.visualizeBOKData('#bubbles', 'https://eo4geo-uji.firebaseio.com/' , '#textBoK', currentVersion, version, 'orange', yearCurrentVersion, year );
-    setTimeout ( () => {
+    exports.visualizeBOKData('#bubbles', 'https://eo4geo-uji.firebaseio.com/', '#textBoK', currentVersion, version, 'orange', yearCurrentVersion, year);
+    setTimeout(() => {
       browseToConcept(codSelected);
     }, 1000);
     found = true;
 
   }
-  searchOldVersions = function ( code, domElement, version, versionSelected ) {
+  searchOldVersions = function (code, domElement, version, versionSelected) {
     let foundInOld = false;
     let text = "";
-    const oldVersion = version > 1 ? version - 1 : version ;
+    const oldVersion = version > 1 ? version - 1 : version;
     // case when the old version selected is not the first in the list
-    if ( oldVersion > 0 ){
+    if (oldVersion > 0) {
       d3.json('https://eo4geo-uji.firebaseio.com/v' + version + '.json ').then((root, error) => {
         for (var n = 0; n < root.concepts.length; n++) {
-          if ( root.concepts[n].code == code && !foundInOld) {
-            if ( versionSelected !== null && versionSelected < version ) {
+          if (root.concepts[n].code == code && !foundInOld) {
+            if (versionSelected !== null && versionSelected < version) {
               let lastChild = document.querySelector('#oldVersions p');
               let nodeToAdd = document.querySelector('#oldVersions');
               let newNode = document.createElement("li");
               newNode.style = 'list-style-type:none; text-indent: 2em;';
-              newNode.innerHTML = "<a style='color: #007bff; font-weight: 400; cursor: pointer; text-indent: 2em;' onclick=' visualizeOldBokData("+ version + ", " + root.creationYear + " )'> - version "  + version + ".0 (" + root.creationYear + ")</a>";
+              newNode.innerHTML = "<a style='color: #007bff; font-weight: 400; cursor: pointer; text-indent: 2em;' onclick=' visualizeOldBokData(" + version + ", " + root.creationYear + " )'> - version " + version + ".0 (" + root.creationYear + ")</a>";
               nodeToAdd.insertBefore(newNode, lastChild);
-            } else if( versionSelected == null || versionSelected > version ) {
-              text += "<li style='list-style-type:none; text-indent: 2em;'><a style='color: #007bff; font-weight: 400; cursor: pointer; text-indent: 2em;' onclick=' visualizeOldBokData("+ version  + ", " + root.creationYear + " )'> - version "  + version + ".0 (" + root.creationYear + ")</a></li>";
-              domElement.innerHTML += text ;
+            } else if (versionSelected == null || versionSelected > version) {
+              text += "<li style='list-style-type:none; text-indent: 2em;'><a style='color: #007bff; font-weight: 400; cursor: pointer; text-indent: 2em;' onclick=' visualizeOldBokData(" + version + ", " + root.creationYear + " )'> - version " + version + ".0 (" + root.creationYear + ")</a></li>";
+              domElement.innerHTML += text;
             }
             foundInOld = true;
           }
         }
       });
-      setTimeout ( () => {
+      setTimeout(() => {
         searchOldVersions(code, domElement, version - 1, versionSelected);
       }, 1000);
     }
@@ -689,7 +704,7 @@ exports.visualizeBOKData = function (svgId, url, textId, numVersion, oldVersion,
         } else if (headline == "Similar concepts" || headline == "Postrequisites" || headline == "Prequisites") {
           text += "<a style='color: #007bff; font-weight: 400; cursor: pointer;' class='concept-name' onclick='browseToConcept(\"" + nameShort + "\")'>" + value + "</a> <br>";
         } else if (headline == "Source documents") {
-          if ( value.length > 1 ) {
+          if (value.length > 1) {
             text += "<a style='color: #007bff; font-weight: 400; cursor: pointer;' href='" + value + "'>" + nameShort + "</a> <br>";
           } else {
             text += "<p>" + nameShort + "</p> <br>";
@@ -717,7 +732,7 @@ exports.visualizeBOKData = function (svgId, url, textId, numVersion, oldVersion,
         exports.displayConcept(nodeData);
         dataAndFunctions.zoom(node);
       }
-      if( isAnOldVersion ) {
+      if (isAnOldVersion) {
         isAnObsoleteId = true;
         isAnOldVersion = false;
       }
