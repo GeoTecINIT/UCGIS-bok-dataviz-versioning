@@ -655,7 +655,7 @@ exports.visualizeBOKData = function (svgId, url, textId, numVersion, oldVersion,
   visualizeOldBokData = function (version, year) {
     let mainNode = document.getElementById('bubbles');
     mainNode.innerHTML = "";
-    exports.visualizeBOKData('#bubbles', 'https://findinbok-release.firebaseio.com/', '#textBoK', currentVersion, version, 'orange', yearCurrentVersion, year);
+    exports.visualizeBOKData('#bubbles', 'https://eo4geo-uji.firebaseio.com/', '#textBoK', currentVersion, version, 'orange', yearCurrentVersion, year);
     setTimeout(() => {
       browseToConcept(codSelected);
     }, 1000);
@@ -668,7 +668,7 @@ exports.visualizeBOKData = function (svgId, url, textId, numVersion, oldVersion,
     const oldVersion = version > 1 ? version - 1 : version;
     // case when the old version selected is not the first in the list
     if (oldVersion > 0) {
-      d3.json('https://findinbok-release.firebaseio.com/v' + version + '.json ').then((root, error) => {
+      d3.json('https://eo4geo-uji.firebaseio.com/v' + version + '.json ').then((root, error) => {
         for (var n = 0; n < root.concepts.length; n++) {
           if (root.concepts[n].code == code && !foundInOld) {
             if (versionSelected !== null && versionSelected < version) {
