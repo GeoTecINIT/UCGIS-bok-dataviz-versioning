@@ -7,7 +7,9 @@ var Relationtype = {
   BROADER: "broader",
   NARROWER: "narrower",
   DEMONSTRATES: "demonstrates",
-  SUBCONCEPT: "is subconcept of"
+  SUBCONCEPT: "is subconcept of",
+  SIMILARTO: "is similar to",
+  PREREQUISITEOF: "is prerequisite of"
 };
 
 // d3-compliant java object node with default values:
@@ -204,6 +206,7 @@ exports.parseBOKData = function (bokJSON) {
     newNode.demonstrableSkills = [];
     newNode.sourceDocuments = [];
     newNode.parent = null;
+    newNode.similarConcepts = [];
     namehash[bokJSON.concepts[n].code] = newNode.name;
     allNodes.push(newNode);
   }
@@ -215,6 +218,18 @@ exports.parseBOKData = function (bokJSON) {
       allNodes[bokJSON.relations[l].target].children.push(allNodes[bokJSON.relations[l].source]);
       // add parent
       allNodes[bokJSON.relations[l].source].parent = allNodes[bokJSON.relations[l].target];
+    }
+    if (bokJSON.relations[l].name == Relationtype.SIMILARTO) {
+      //push node into childre array
+      allNodes[bokJSON.relations[l].target].similarConcepts.push(allNodes[bokJSON.relations[l].source]);
+    }
+    if (bokJSON.relations[l].name == Relationtype.PREREQUISITEOF) {
+      //push node into childre array
+      allNodes[bokJSON.relations[l].target].prerequisites.push(allNodes[bokJSON.relations[l].source]);
+    }
+    if (bokJSON.relations[l].name == Relationtype.POSTREQUISITE) {
+      //push node into childre array
+      allNodes[bokJSON.relations[l].target].postrequisites.push(allNodes[bokJSON.relations[l].source]);
     }
   }
 
@@ -292,7 +307,6 @@ exports.visualizeBOKData = function (svgId, url, textId, numVersion, oldVersion,
   d3.json(url + 'v' + numVersion + '.json ').then((root, error) => {
 
     var bokData = exports.parseBOKData(root);
-
     if (error) throw error;
 
     dataAndFunctions = function () {
@@ -380,7 +394,7 @@ exports.visualizeBOKData = function (svgId, url, textId, numVersion, oldVersion,
       .style("display", function (d) {
         return d.parent === root || (d === root && d.children == null) ? "inline" : "none";
       })
-      .style("font", '400 6px "Helvetica Neue", Helvetica, Arial, sans-serif')
+      .style("font", '500 7px "Helvetica Neue", Helvetica, Arial, sans-serif')
       .each(function (d) { //This function inserts a label and adds linebreaks, avoiding lines > 13 characters
         var arr = d.data.name.split(" ");
         var arr2 = [];
@@ -458,7 +472,6 @@ exports.visualizeBOKData = function (svgId, url, textId, numVersion, oldVersion,
 
   //displays all available content for the currently focussed concept in the description box:
   exports.displayConcept = function (d) {
-
 
     if (textId != null) {
 
@@ -538,18 +551,17 @@ exports.visualizeBOKData = function (svgId, url, textId, numVersion, oldVersion,
         infoNode.innerHTML = "";
 
       window.history.pushState("object or string", "Find In Bok", "/" + d.nameShort);
-
       //display description of subconcepts (if any):
       displayOrderedList(d.children, "name", "Subconcepts", infoNode, "boksubconcepts");
 
       //display description of prerequisites (if any):
-      // displayUnorderedList(d.prerequisites, null, "Prequisites", infoNode, "bokprequisites");
+      displayOrderedList(d.prerequisites, null, "Prequisites", infoNode, "bokprequisites");
 
       //display description of postrequisites (if any):
-      // displayUnorderedList(d.postrequisites, null, "Postrequisites", infoNode, "bokpostrequisites");
+      displayOrderedList(d.postrequisites, null, "Postrequisites", infoNode, "bokpostrequisites");
 
       //display description of similar concepts (if any):
-      // displayUnorderedList(d.similarConcepts, null, "Similar concepts", infoNode, "boksimilar");
+      displayOrderedList(d.similarConcepts, null, "Similar concepts", infoNode, "boksimilar");
 
       //display description of demonstrable skills (if any):
       displayUnorderedList(d.demonstrableSkills, "description", "Demonstrable skills", infoNode, "bokskills");
@@ -591,7 +603,7 @@ exports.visualizeBOKData = function (svgId, url, textId, numVersion, oldVersion,
           nameShort = array[i]['nameShort'];
         } else { //For Similar, Postrequisites and Prerequisites
           value = array[i];
-          nameShort = array[i];
+          nameShort = array[i]['nameShort'];
         }
         if (namehash != null) {
           value = namehash[value];
@@ -601,7 +613,7 @@ exports.visualizeBOKData = function (svgId, url, textId, numVersion, oldVersion,
         if (headline == "Subconcepts") {
           text += "<a style='color: #007bff; font-weight: 400; cursor: pointer;' class='concept-name' id='sc-" + nameShort + "' onclick='browseToConcept(\"" + nameShort + "\")'>[" + nameShort + '] ' + array[i][propertyname] + "</a> <br>";
         } else if (headline == "Similar concepts" || headline == "Postrequisites" || headline == "Prequisites") {
-          text += "<a class='concept-name' onclick='browseToConcept(\"" + nameShort + "\")'>" + value + "</a> <br>";
+          text += "<a style='color: #007bff; font-weight: 400; cursor: pointer;' class='concept-name' id='sc-" + nameShort + "' onclick='browseToConcept(\"" + nameShort + "\")'>[" + nameShort + '] ' + array[i].name + "</a> <br>";
         } else {
           text += "<a>" + value + "</a> <br>";
         }
@@ -645,7 +657,7 @@ exports.visualizeBOKData = function (svgId, url, textId, numVersion, oldVersion,
   visualizeOldBokData = function (version, year) {
     let mainNode = document.getElementById('bubbles');
     mainNode.innerHTML = "";
-    exports.visualizeBOKData('#bubbles', 'https://eo4geo-uji.firebaseio.com/', '#textBoK', currentVersion, version, 'orange', yearCurrentVersion, year);
+    exports.visualizeBOKData('#bubbles', 'https://findinbok-release.firebaseio.com/', '#textBoK', currentVersion, version, 'orange', yearCurrentVersion, year);
     setTimeout(() => {
       browseToConcept(codSelected);
     }, 1000);
@@ -658,7 +670,7 @@ exports.visualizeBOKData = function (svgId, url, textId, numVersion, oldVersion,
     const oldVersion = version > 1 ? version - 1 : version;
     // case when the old version selected is not the first in the list
     if (oldVersion > 0) {
-      d3.json('https://eo4geo-uji.firebaseio.com/v' + version + '.json ').then((root, error) => {
+      d3.json('https://findinbok-release.firebaseio.com/v' + version + '.json ').then((root, error) => {
         for (var n = 0; n < root.concepts.length; n++) {
           if (root.concepts[n].code == code && !foundInOld) {
             if (versionSelected !== null && versionSelected < version) {
