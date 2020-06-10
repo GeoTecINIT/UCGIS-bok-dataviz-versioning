@@ -222,14 +222,12 @@ exports.parseBOKData = function (bokJSON) {
     if (bokJSON.relations[l].name == Relationtype.SIMILARTO) {
       //push node into childre array
       allNodes[bokJSON.relations[l].target].similarConcepts.push(allNodes[bokJSON.relations[l].source]);
+      allNodes[bokJSON.relations[l].source].similarConcepts.push(allNodes[bokJSON.relations[l].target]);
     }
     if (bokJSON.relations[l].name == Relationtype.PREREQUISITEOF) {
       //push node into childre array
       allNodes[bokJSON.relations[l].target].prerequisites.push(allNodes[bokJSON.relations[l].source]);
-    }
-    if (bokJSON.relations[l].name == Relationtype.POSTREQUISITE) {
-      //push node into childre array
-      allNodes[bokJSON.relations[l].target].postrequisites.push(allNodes[bokJSON.relations[l].source]);
+      allNodes[bokJSON.relations[l].source].prerequisites.push(allNodes[bokJSON.relations[l].target]);
     }
   }
 
