@@ -31,6 +31,7 @@ CostumD3Node = function () {
   this.demonstrableSkills = [];
   //Source documents are not retrieved by the XML
   this.sourceDocuments = [];
+  this.contributors = [];
   this.uri = "";
 
   //field required to discard the old one when notation is repeated
@@ -205,6 +206,7 @@ exports.parseBOKData = function (bokJSON) {
     newNode.children = [];
     newNode.demonstrableSkills = [];
     newNode.sourceDocuments = [];
+    newNode.contributors = [];
     newNode.parent = null;
     newNode.similarConcepts = [];
     namehash[bokJSON.concepts[n].code] = newNode.name;
@@ -250,6 +252,20 @@ exports.parseBOKData = function (bokJSON) {
       sourceDoc.nameShort = bokJSON.references[e].name;
       sourceDoc.url = bokJSON.references[e].url;
       allNodes[node].sourceDocuments.push(sourceDoc);
+    }
+  }
+
+  if ( typeof bokJSON.contributors != "undefined") {
+    for (var e = 0; e < bokJSON.contributors.length; e++) {
+      for (var s = 0; s < bokJSON.contributors[e].concepts.length; s++) {
+        var node = bokJSON.contributors[e].concepts[s];
+        var cont = {};
+        cont.description = bokJSON.contributors[e].description;
+        cont.nameShort = bokJSON.contributors[e].name;
+        cont.url = bokJSON.contributors[e].url;
+        allNodes[node].contributors.push(cont);
+        allNodes[node].contributors.sort();
+      }
     }
   }
 
@@ -564,8 +580,13 @@ exports.visualizeBOKData = function (svgId, url, textId, numVersion, oldVersion,
       //display description of demonstrable skills (if any):
       displayUnorderedList(d.demonstrableSkills, "description", "Demonstrable skills", infoNode, "bokskills");
 
+      //display contributors of concept (if any):
+      displayUnorderedList(d.contributors, "url", "Contributors", infoNode, "boksource");
+
       //display source documents of concept (if any):
       displayUnorderedList(d.sourceDocuments, "url", "Source documents", infoNode, "boksource");
+
+
 
       displayVersions(d.nameShort, infoNode, numVersion, yearVersion);
 
@@ -718,8 +739,14 @@ exports.visualizeBOKData = function (svgId, url, textId, numVersion, oldVersion,
           } else {
             text += "<p>" + nameShort + "</p> <br>";
           }
+        } else if (headline == "Contributors") {
+          if (value.length > 1) {
+            text += "<a style='color: #007bff; font-weight: 400; cursor: pointer;' href='" + value + "'>" + nameShort + "</a>, ";
+          } else {
+            text += "<p>" + nameShort + "</p>, ";
+          }
         } else {
-          text += "<a>" + value + "</a> <br>";
+          text += "<a>" + value + "</a>, ";
         }
       };
       text += "</ul></div>";
