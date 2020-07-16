@@ -201,6 +201,7 @@ exports.parseBOKData = function (bokJSON) {
     newNode.name = bokJSON.concepts[n].name;
     newNode.nameShort = bokJSON.concepts[n].code;
     newNode.description = bokJSON.concepts[n].description;
+    newNode.selfAssesment = bokJSON.concepts[n].selfAssesment;
     newNode.uri = n;
     newNode.id = n;
     newNode.children = [];
@@ -229,7 +230,7 @@ exports.parseBOKData = function (bokJSON) {
     if (bokJSON.relations[l].name == Relationtype.PREREQUISITEOF) {
       //push node into childre array
       allNodes[bokJSON.relations[l].target].prerequisites.push(allNodes[bokJSON.relations[l].source]);
-      allNodes[bokJSON.relations[l].source].prerequisites.push(allNodes[bokJSON.relations[l].target]);
+      //allNodes[bokJSON.relations[l].source].prerequisites.push(allNodes[bokJSON.relations[l].target]);
     }
   }
 
@@ -374,8 +375,10 @@ exports.visualizeBOKData = function (svgId, url, textId, numVersion, oldVersion,
           return dataAndFunctions.colorhash[d.data.nameShort.substring(0, 2)] ? dataAndFunctions.colorhash[d.data.nameShort.substring(0, 2)] : dataAndFunctions.colorhash['no'];
         } else if (d.depth == 2) {
           return dataAndFunctions.colorhash[d.parent.data.nameShort.substring(0, 2)] ? dataAndFunctions.colorhash[d.parent.data.nameShort.substring(0, 2)] : dataAndFunctions.colorhash['no'];
-        } else if (d.depth >= 3) {
-          return dataAndFunctions.colorhash[d.parent.parent.data.nameShort.substring(0, 2)] ? dataAndFunctions.colorhash[d.parent.parent.data.nameShort.substring(0, 2)] : dataAndFunctions.colorhash['no'];
+        } else if (d.depth == 3) {
+          return dataAndFunctions.colorhash[d.parent.data.nameShort.substring(0, 2)] ? dataAndFunctions.colorhash[d.parent.data.nameShort.substring(0, 2)] : dataAndFunctions.colorhash['no'];
+        } else if (d.depth >= 4) {
+          return dataAndFunctions.colorhash[d.parent.parent.parent.data.nameShort.substring(0, 2)] ? dataAndFunctions.colorhash[d.parent.parent.parent.data.nameShort.substring(0, 2)] : dataAndFunctions.colorhash['no'];
         } else {
           return "turquoise";
         }
@@ -503,12 +506,20 @@ exports.visualizeBOKData = function (svgId, url, textId, numVersion, oldVersion,
       titleNode.id = "boktitle";
       titleNode.attributes = "#boktitle";
       titleNode.innerHTML = "[" + d.nameShort + "] " + d.name; //display Name and shortcode of concept:
+      titleNode.style="margin-bottom: 0px;";
       window.history.pushState("object or string", "Find In Bok", "/" + d.nameShort);
       var pNode = document.createElement("p");
       pNode.innerHTML = "Permalink: <a href= 'https://bok.eo4geo.eu/" + d.nameShort + "'> https://bok.eo4geo.eu/" + d.nameShort + "</a>";
       mainNode.appendChild(pNode);
-
       mainNode.appendChild(titleNode);
+      if ( d.selfAssesment ){
+        var statusNode = document.createElement("div");
+        statusNode.innerHTML=d.selfAssesment;
+        let statusText = document.createElement("div");
+        statusText.innerHTML= 'Status: ' + statusNode.innerText;
+        statusText.style="margin-bottom: 10px;";
+        mainNode.appendChild(statusText);
+      }
       if (isAnOldVersion) {
         const obsNode = document.createElement('p');
         let textObs = '';
@@ -728,6 +739,7 @@ exports.visualizeBOKData = function (svgId, url, textId, numVersion, oldVersion,
           value = array[i];
           nameShort = array[i];
         }
+
         /* We attach the browseToConcept function to each subconcept of the list */
         if (headline == "Subconcepts") {
           text += "<a style='color: #007bff; font-weight: 400; cursor: pointer;' class='concept-name' id='sc-" + nameShort + "' onclick='browseToConcept(\"" + nameShort + "\")'>" + "[" + nameShort + "] " + value + "</a> <br>";
@@ -737,16 +749,18 @@ exports.visualizeBOKData = function (svgId, url, textId, numVersion, oldVersion,
           if (value.length > 1) {
             text += "<a style='color: #007bff; font-weight: 400; cursor: pointer;' href='" + value + "'>" + nameShort + "</a> <br>";
           } else {
-            text += "<p>" + nameShort + "</p> <br>";
+            text += "<a>" + nameShort + "</a> <br>";
           }
         } else if (headline == "Contributors") {
-          if (value.length > 1) {
+          if ( i == j-1 ) {
+            text += "<a style='color: #007bff; font-weight: 400; cursor: pointer;' href='" + value + "'>" + nameShort + "</a> ";
+          } else if (value.length > 1) {
             text += "<a style='color: #007bff; font-weight: 400; cursor: pointer;' href='" + value + "'>" + nameShort + "</a>, ";
-          } else {
+          }  else{
             text += "<p>" + nameShort + "</p>, ";
           }
         } else {
-          text += "<a>" + value + "</a>, ";
+          text += "<a>" + value + "</a> <br> ";
         }
       };
       text += "</ul></div>";
