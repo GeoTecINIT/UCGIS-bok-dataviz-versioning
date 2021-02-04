@@ -791,6 +791,8 @@ exports.visualizeBOKData = function (svgId, url, textId, numVersion, oldVersion,
           }  else{
             text += "<p>" + nameShort + "</p>, ";
           }
+        } else if (headline == "Skills") {
+          text += "<li>" + value + "</li>";
         } else {
           text += "<a>" + value + "</a> <br> ";
         }
