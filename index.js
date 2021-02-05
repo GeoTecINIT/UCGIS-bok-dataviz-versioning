@@ -779,15 +779,15 @@ exports.visualizeBOKData = function (svgId, url, textId, numVersion, oldVersion,
           text += "<a style='color: #007bff; font-weight: 400; cursor: pointer;' class='concept-name' onclick='browseToConcept(\"" + nameShort + "\")'>" + value + "</a> <br>";
         } else if (headline == "Source documents") {
           if (value.length > 1) {
-            text += "<a style='color: #007bff; font-weight: 400; cursor: pointer;' href='" + value + "'>" + nameShort + "</a> <br>";
+            text += "<li><a style='color: #007bff; font-weight: 400; cursor: pointer;' target='_blank' href='" + value + "'>" + nameShort + "</a></li>";
           } else {
-            text += "<a>" + nameShort + "</a> <br>";
+            text += "<li><a>" + nameShort + "</a></li>";
           }
         } else if (headline == "Contributors") {
           if ( i == j-1 ) {
-            text += "<a style='color: #007bff; font-weight: 400; cursor: pointer;' href='" + value + "'>" + nameShort + "</a> ";
+            text += "<a style='color: #007bff; font-weight: 400; cursor: pointer;' target='_blank' href='" + value + "'>" + nameShort + "</a> ";
           } else if (value.length > 1) {
-            text += "<a style='color: #007bff; font-weight: 400; cursor: pointer;' href='" + value + "'>" + nameShort + "</a>, ";
+            text += "<a style='color: #007bff; font-weight: 400; cursor: pointer;' target='_blank' href='" + value + "'>" + nameShort + "</a>, ";
           }  else{
             text += "<p>" + nameShort + "</p>, ";
           }
