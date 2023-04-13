@@ -21,9 +21,13 @@ let view;
 
 let codesColors = [];
 
+let selectedNodes = [];
+let allNodes = [];
+let fullBoK = {};
+
 export function parseBOKData(bokJSON) {
   // loop all nodes
-  var allNodes = [];
+  allNodes = [];
 
   bokJSON.concepts.forEach((n, index) => {
     var node = {
@@ -47,7 +51,7 @@ export function parseBOKData(bokJSON) {
 
   });
 
-  console.log(codesColors)
+  // console.log(codesColors)
 
   // add children - parent
   bokJSON.relations.forEach(r => {
@@ -100,6 +104,8 @@ export function parseBOKData(bokJSON) {
       break;
     }
   }
+
+  // fullBoK['current'] = allNodes;
 
   return rootNode;
 
@@ -160,7 +166,7 @@ export function visualizeBOKData(url) {
       .append("svg")
       .attr("viewBox", `-${width / 2} -${height / 2} ${width} ${height}`)
       .style("display", "block")
-      .style("margin", "0 -14px")
+      // .style("margin", "0 -14px")
       //  .style("background", d3.interpolateRainbow(0))
       .style("cursor", "pointer")
       .on("click", () => zoom(root));
@@ -172,9 +178,11 @@ export function visualizeBOKData(url) {
       .join("circle")
       // .attr("fill", d => d.children ? color(d.depth / 10) : "white")
       .attr("fill", d => {
+        // TODO find color in array no more than coloScheme array number
         let code = codesColors.indexOf(d.data.code.substring(0, 2));
-        while (code > d3.schemeSet3.length)
+        while (code >= d3.schemeSet3.length)
           code = code - d3.schemeSet3.length;
+
         return d3.schemeSet3[code];
       })
       //.attr("fill", d => d3.schemeSet3[d.depth])
@@ -263,42 +271,52 @@ export function visualizeBOKData(url) {
 
   });
 
-  /*   function searchInBoK(string, searchCode, searchName, searchDes, searchSkills) {
-      cleanSearchInBOK();
-
-      searchInputFieldDoc = string.trim();
-
-      if (searchInputFieldDoc != "" && searchInputFieldDoc != " ") {
-        selectedNodes = dataAndFunctions.conceptNodeCollection.getNodesIdByKeyword(searchInputFieldDoc, searchCode, searchName, searchDes, searchSkills);
-        //highlight search
-        for (var i = 0; i < selectedNodes.length; i++) {
-          var circle = document.getElementById(selectedNodes[i]);
-          if (circle != null) {
-            circle.style.stroke = COLOR_STROKE_SELECTED;
-            circle.style.strokeWidth = "2px";
-          }
-        }
-      }
-      return dataAndFunctions.conceptNodeCollection.getNodesByKeyword(searchInputFieldDoc, searchCode, searchName, searchDes, searchSkills);
-    }
-
-    function cleanSearchInBOK(d) {
-      //clean search
-      for (var i = 0; i < selectedNodes.length; i++) {
-        var circle = document.getElementById(selectedNodes[i]);
-        if (circle != null) {
-          circle.style.stroke = "";
-          circle.style.strokeWidth = "";
-        }
-      }
-      selectedNodes = [];
-    }
-
-    function searchInBoKAndWriteResults(string) {
-      var results = searchInBoK(string);
-
-    } */
 }
+
+export function searchInBoK(string, searchCode, searchName, searchDes, searchSkills) {
+  cleanSearchInBOK();
+
+  let searchInputFieldDoc = string.trim();
+  if (searchInputFieldDoc != "" && searchInputFieldDoc != " ") {
+
+    let results = allNodes.filter((n) => {
+      let filterBool = searchCode && n.code.includes(searchInputFieldDoc) ||
+        searchName && n.name.includes(searchInputFieldDoc) ||
+        searchDes && n.description.includes(searchInputFieldDoc);
+
+      // search for coincidences in demonstrableSkills
+      if (searchSkills && !filterBool) {
+        n.demonstrableSkills.forEach(s => {
+          if (s.includes(searchInputFieldDoc)) {
+            filterBool = true;
+          }
+        });
+      }
+      return filterBool;
+
+    });
+
+    results.forEach(n => {
+      d3.select('#node-' + n.code)
+        .attr("stroke-width", "2px");
+    });
+
+    selectedNodes = results;
+
+    return selectedNodes;
+  }
+}
+
+export function cleanSearchInBOK() {
+  //clean search
+  selectedNodes.forEach(n => {
+    d3.select('#node-' + n.code)
+      .attr("stroke-width", "0.2px");
+  });
+  selectedNodes = [];
+}
+
+
 
 /* export function zoomTo(v) {
   const k = width / v[2];
