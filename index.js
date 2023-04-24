@@ -40,7 +40,7 @@ export function parseBOKData(bokJSON) {
       code: n.code,
       description: n.description,
       selfAssesment: n.selfAssesment,
-      uri: n.uri,
+      uri: n.link,
       id: index,
       value: 1,
       children: [],
@@ -56,7 +56,7 @@ export function parseBOKData(bokJSON) {
 
   });
 
-  // console.log(codesColors)
+  console.log(codesColors)
 
   // add children - parent
   bokJSON.relations.forEach(r => {
@@ -359,6 +359,9 @@ export function displayConcept(d) {
 
   var pNode = document.createElement("p");
   pNode.innerHTML = "Permalink: <a href= 'https://ucgis-bok.web.app/" + d.data.code + "' target='blank'> https://ucgis-bok.web.app/" + d.data.code + "</a>";
+  if (d.data.uri) {
+    pNode.innerHTML += "<br> LTB Link: <a href= '" + d.data.uri + "' target='blank'> " + d.data.uri + "</a>";
+  }
   mainNode.appendChild(pNode);
 
   mainNode.appendChild(titleNode);
