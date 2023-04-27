@@ -25,6 +25,8 @@ let selectedNodes = [];
 let allNodes = [];
 let rootNodeCode = '';
 let fullBoK = {};
+let fullParsedBoK = {};
+let versionsCodes = [];
 
 let allVersions = [];
 let currSelCode = '';
@@ -33,9 +35,10 @@ const COLOR_STROKE_SELECTED = 'black';
 const COLOR_STROKE_DEFAULT = '#090909';
 const COLOR_STROKE_RESULTS = '#080808';
 
-export function parseBOKData(bokJSON) {
+export function parseBOKData(bokJSON, v) {
   // loop all nodes
   allNodes = [];
+  versionsCodes[v] = [];
 
   bokJSON.concepts.forEach((n, index) => {
     var node = {
@@ -53,6 +56,7 @@ export function parseBOKData(bokJSON) {
       sourceDocuments: []
     };
     allNodes.push(node);
+    versionsCodes[v].push(n.code.toLowerCase());
 
     if (!codesColors.includes(n.code.substring(0, 2)))
       codesColors.push(n.code.substring(0, 2))
@@ -134,14 +138,13 @@ export function parseBOKData(bokJSON) {
 
 
 export function browseToConcept(code) {
-  currSelCode = code.toLowerCase();
   var node = d3.select('#node-' + code.toLowerCase()).data();
-  // Can not find the node, display root
+  // Can not find the node, display root, check if code is erroneous
   if (node.length == 0) {
-    node = d3.select('#node-' + rootNodeCode.toLowerCase()).data();
-    zoom(node[0]);
-    displayConcept(node[0]);
-    displayError(code);
+    navigateToRoot();
+    if (code.length > 0) {
+      displayError(code);
+    }
   } else {
     zoom(node[0]);
     displayConcept(node[0]);
@@ -162,8 +165,7 @@ export function getBoKData(url) {
 
 export function visualizeBoKVersion(version) {
 
-  // Parse 'current' version of BoK
-  var bokData = parseBOKData(fullBoK[version]);
+  var bokData = fullParsedBoK[version];
 
   var pack = data => d3.pack()
     .size([width, height])
@@ -187,6 +189,8 @@ export function visualizeBoKVersion(version) {
 
   d3.select('#' + TEMPLATE_IdGraph)
     .select("svg").selectAll("circle").remove();
+  d3.select('#' + TEMPLATE_IdGraph)
+    .select("svg").selectAll("text").remove();
 
   const svg = d3.select('#' + TEMPLATE_IdGraph)
     .select("svg")
@@ -198,7 +202,6 @@ export function visualizeBoKVersion(version) {
     // .data(root.descendants().slice(1))  // If we need to remove first element, in case root is duplicated
     .join("circle")
     .attr("fill", d => {
-      // TODO find color in array no more than coloScheme array number
       let code = codesColors.indexOf(d.data.code.substring(0, 2));
       while (code >= d3.schemeSet3.length)
         code = code - d3.schemeSet3.length;
@@ -254,11 +257,10 @@ export function visualizeBoKVersion(version) {
 
   function zoom(d) {
     const focus0 = focus;
-
     focus = d;
 
     const transition = svg.transition()
-      .duration(750)
+      .duration(1000)
       .tween("zoom", d => {
         const i = d3.interpolateZoom(view, [focus.x, focus.y, focus.r * 2]);
         return t => zoomTo(i(t));
@@ -284,12 +286,7 @@ export function visualizeBoKVersion(version) {
   }
 
   window.zoom = zoom;
-
-
-
   browseToConcept(currSelCode);
-
-  // displayConcept(root);
 
 }
 
@@ -300,6 +297,11 @@ export async function visualizeBOKData(url, version) {
 
   await getBoKData(url);
   allVersions = Object.keys(fullBoK);
+
+  allVersions.forEach(v => {
+    fullParsedBoK[v] = parseBOKData(fullBoK[v], v);
+  });
+
   d3.select('#' + TEMPLATE_IdGraph)
     .append("svg")
     .attr("viewBox", `-${width / 2} -${height / 2} ${width} ${height}`)
@@ -344,7 +346,7 @@ export function searchInBoK(string, searchCode, searchName, searchDes, searchSki
 
     return selectedNodes;
   } else {
-    browseToConcept('BOK');
+    browseToConcept(rootNodeCode);
     // navigateToRoot();
     return [];
   }
@@ -361,7 +363,7 @@ export function cleanSearchInBOK() {
 }
 
 export function navigateToRoot() {
-  const root = d3.select('#node-BOK');
+  const root = d3.select('#node-' + rootNodeCode);
   displayConcept(root.data()[0]);
 }
 
@@ -379,6 +381,7 @@ export function displayError(code) {
 //displays all available content for the currently focussed concept in the description box:
 export function displayConcept(d) {
 
+  currSelCode = d.data.code.toLowerCase();
   var mainNode = document.getElementById(TEMPLATE_IdText)
   mainNode.innerHTML = "";
 
@@ -432,9 +435,8 @@ export function displayConcept(d) {
   d.data.contributors && d.data.contributors.length > 0 ? displayLinksList(d.data.contributors, infoNode, "Contributors") : null;
   d.data.sourceDocuments && d.data.sourceDocuments.length > 0 ? displayLinksList(d.data.sourceDocuments, infoNode, "Source Documents") : null;
 
-  displayVersions(infoNode);
-  // displayVersions(d.nameShort, infoNode, numVersion, yearVersion);
-
+  // display versions
+  displayVersions(infoNode, d.data.code);
   mainNode.appendChild(infoNode);
 
 };
@@ -443,12 +445,10 @@ export function displayConcept(d) {
 export function displayChildren(array, domElement, headline) {
 
   array.sort((a, b) => a.data.code.localeCompare(b.data.code));
-
   var text = "<h2>" + headline + " [" + array.length + "] </h2><div><ul>";
   array.forEach(c => {
     text += "<a style='color: #007bff; font-weight: 400; cursor: pointer;' class='concept-name' id='sc-" + c.data.code + "' onclick='browseToConcept(\"" + c.data.code + "\")'>[" + c.data.code + '] ' + c.data.name + "</a> <br>";
   });
-
   text += "</ul></div>";
   domElement.innerHTML += text;
 };
@@ -460,7 +460,6 @@ export function displayLinksList(array, domElement, headline) {
   array.forEach(l => {
     text += "<a style='color: #007bff; font-weight: 400; cursor: pointer;' class='concept-name' href='" + l.url + "' target='_blank' >" + l.name + "</a> <br>";
   });
-
   text += "</ul></div>";
   domElement.innerHTML += text;
 };
@@ -472,20 +471,21 @@ export function displayTextList(array, domElement, headline) {
   array.forEach(l => {
     text += "<li>" + l + "</li>";
   });
-
   text += "</ul></div>";
   domElement.innerHTML += text;
 };
 
 // displays list such as skills
-export function displayVersions(domElement) {
+export function displayVersions(domElement, conceptCode) {
 
   var text = "<h2> Versions [" + allVersions.length + "] </h2><div><ul>";
   allVersions.forEach(v => {
 
-    text += `<li> <a style='color: #007bff; font-weight: 400; cursor: pointer;' onclick='visualizeBoKVersion(\"${v}\")' >${v}</a></li>`;
-  });
+    if (versionsCodes[v].includes(conceptCode.toLowerCase())) {
+      text += `<li> <a style='color: #007bff; font-weight: 400; cursor: pointer;' onclick='visualizeBoKVersion(\"${v}\")' >${v}</a></li>`;
+    }
 
+  });
   text += "</ul></div>";
   domElement.innerHTML += text;
 };
