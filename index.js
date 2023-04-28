@@ -63,7 +63,7 @@ export function parseBOKData(bokJSON, v) {
 
   });
 
-  console.log(codesColors)
+  // console.log(codesColors)
 
   // add children - parent
   bokJSON.relations.forEach(r => {
@@ -113,7 +113,7 @@ export function parseBOKData(bokJSON, v) {
     if (allNodes[i].parents.length == 0) {
       rootNode = allNodes[i];
       rootNodeCode = allNodes[i].code.toLowerCase();
-      console.log("ROOT NODE " + i + " code " + rootNodeCode)
+      // console.log("ROOT NODE " + i + " code " + rootNodeCode)
       break;
     }
   }
@@ -138,22 +138,44 @@ export function parseBOKData(bokJSON, v) {
 
 
 export function browseToConcept(code) {
-  var node = d3.select('#node-' + code.toLowerCase()).data();
-  // Can not find the node, display root, check if code is erroneous
-  if (node.length == 0) {
-    navigateToRoot();
-    if (code.length > 0) {
-      displayError(code);
+  if (code) {
+    console.log("browseToConcept " + code);
+    var node = d3.select('#node-' + code.toLowerCase()).data();
+    // Can not find the node, find in old versions
+    if (node.length == 0) {
+      let foundInOld = false;
+      let versionToDisplay = 'current';
+      allVersions.forEach(v => {
+        if (versionsCodes[v].includes(code.toLowerCase())) {
+          foundInOld = true;
+          versionToDisplay = v;
+        }
+      });
+      // if found in old version
+      if (foundInOld) {
+        currSelCode = code.toLowerCase();
+        visualizeBoKVersion(versionToDisplay);
+        displayMsgOldV(code, versionToDisplay);
+        // else navigate to root and show error
+      } else {
+        navigateToRoot();
+        if (code.length > 0) {
+          displayError(code);
+        }
+      }
+
+    } else {
+      zoom(node[0]);
+      displayConcept(node[0]);
     }
   } else {
-    zoom(node[0]);
-    displayConcept(node[0]);
+    navigateToRoot();
   }
 }
 
 window.browseToConcept = browseToConcept;
 
-export function getBoKData(url) {
+export async function getBoKData(url) {
   return new Promise(resolve => {
     d3.json(url + '.json ').then((bok, error) => {
       fullBoK = bok;
@@ -363,6 +385,7 @@ export function cleanSearchInBOK() {
 }
 
 export function navigateToRoot() {
+  console.log("Navigate to root");
   const root = d3.select('#node-' + rootNodeCode);
   displayConcept(root.data()[0]);
 }
@@ -373,9 +396,15 @@ export function cleanTextInfo() {
 }
 
 export function displayError(code) {
-  console.log("Concept does not exists")
+  console.log("Concept does not exists");
   var mainNode = document.getElementById(TEMPLATE_IdText);
   mainNode.innerHTML = "<p style='color:#c60606;'> Concept " + code + " does not exist. Use the links or the graph to navigate to a valid one. </p> " + mainNode.innerHTML;
+}
+
+export function displayMsgOldV(code, version) {
+  console.log("Concept exists in older version, " + code + " version " + version);
+  var mainNode = document.getElementById(TEMPLATE_IdText);
+  mainNode.innerHTML = "<p style='color:#c60606;'> Concept " + code + " exist in the " + version + " old version. </p> " + mainNode.innerHTML;
 }
 
 //displays all available content for the currently focussed concept in the description box:
@@ -483,6 +512,8 @@ export function displayVersions(domElement, conceptCode) {
 
     if (versionsCodes[v].includes(conceptCode.toLowerCase())) {
       text += `<li> <a style='color: #007bff; font-weight: 400; cursor: pointer;' onclick='visualizeBoKVersion(\"${v}\")' >${v}</a></li>`;
+    } else {
+      text += `<li> ${v} (Concept does not exist in this version)</li>`;
     }
 
   });
