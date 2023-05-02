@@ -320,6 +320,15 @@ export async function visualizeBOKData(url, version) {
   await getBoKData(url);
   allVersions = Object.keys(fullBoK);
 
+  // Sort all Versions chronollogically 
+  allVersions.sort((a, b) => {
+    if (a == 'current')
+      return 1;
+    if (b == 'current')
+      return 0;
+    return parseInt(b.split('v')[1]) - parseInt(a.split('v')[1]);
+  });
+
   allVersions.forEach(v => {
     fullParsedBoK[v] = parseBOKData(fullBoK[v], v);
   });
@@ -420,10 +429,12 @@ export function displayConcept(d) {
 
   window.history.pushState({}, "Find In Bok", "/" + d.data.code);
 
+// `<h2>Superconcept:</h2><div id='bokParentNode'><a style='color: #007bff; font-weight: 400; cursor: pointer;' class='concept-name' id='sc-${d.parent.data.code}' onclick='browseToConcept(\"${d.parent.data.code}\")'>[${d.parent.data.code}] ${d.parent.data.name}</a> </div><br>`
+
   var pNode = document.createElement("p");
-  pNode.innerHTML = "Permalink: <a href= 'https://ucgis-bok.web.app/" + d.data.code + "' target='blank'> https://ucgis-bok.web.app/" + d.data.code + "</a>";
+  pNode.innerHTML = `Permalink: <a href= 'https://ucgis-bok.web.app/${d.data.code}' target='blank'> https://ucgis-bok.web.app/${d.data.code}</a> <a id='permalink' style='color: #007bff; font-weight: 400; cursor: pointer;' onclick='navigator.clipboard.writeText(\"https://ucgis-bok.web.app/${d.data.code}\"); document.getElementById("permalink").innerHTML = "Copied!"; document.getElementById("urilink").innerHTML = "Copy"'>  Copy </a>`;
   if (d.data.uri) {
-    pNode.innerHTML += "<br> LTB Link: <a href= '" + d.data.uri + "' target='blank'> " + d.data.uri + "</a>";
+    pNode.innerHTML += `<br> LTB Link: <a href= '${d.data.uri}' target='blank'> ${d.data.uri}</a>  <a id='urilink' style='color: #007bff; font-weight: 400; cursor: pointer;' onclick='navigator.clipboard.writeText("${d.data.uri}"); document.getElementById("urilink").innerHTML = "Copied!"; document.getElementById("permalink").innerHTML = "Copy"'>  Copy </a>`;
   }
   mainNode.appendChild(pNode);
 
@@ -507,13 +518,13 @@ export function displayTextList(array, domElement, headline) {
 // displays list such as skills
 export function displayVersions(domElement, conceptCode) {
 
-  var text = "<h2> Versions [" + allVersions.length + "] </h2><div><ul>";
+  var text = "<h2> Versioning [" + allVersions.length + "] </h2><div><ul>";
   allVersions.forEach(v => {
 
     if (versionsCodes[v].includes(conceptCode.toLowerCase())) {
-      text += `<li> <a style='color: #007bff; font-weight: 400; cursor: pointer;' onclick='visualizeBoKVersion(\"${v}\")' >${v}</a></li>`;
+      text += `<li> <a style='color: #007bff; font-weight: 400; cursor: pointer;' onclick='visualizeBoKVersion(\"${v}\")' >${v} (${fullBoK[v].creationYear})</a></li>`;
     } else {
-      text += `<li> ${v} (Concept does not exist in this version)</li>`;
+      text += `<li> ${v} (${fullBoK[v].creationYear}) (Concept does not exist in this version)</li>`;
     }
 
   });
