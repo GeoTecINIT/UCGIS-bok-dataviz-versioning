@@ -63,15 +63,19 @@ export function parseBOKData(bokJSON, v) {
 
   });
 
-  // console.log(codesColors)
+  console.log(codesColors)
 
   // add children - parent
   bokJSON.relations.forEach(r => {
     if (r.name === Relationtype.SUBCONCEPT) {
-      if (!allNodes[r.target].children.includes(allNodes[r.source]))
-        allNodes[r.target].children.push(allNodes[r.source]);
-      if (!allNodes[r.source].parents.includes(allNodes[r.target]))
-        allNodes[r.source].parents.push(allNodes[r.target]);
+      if (r.target != r.source) {
+        if (!allNodes[r.target].children.includes(allNodes[r.source]))
+          allNodes[r.target].children.push(allNodes[r.source]);
+        if (!allNodes[r.source].parents.includes(allNodes[r.target]))
+          allNodes[r.source].parents.push(allNodes[r.target]);
+      } else {
+        console.log('Loop relation for concept: ' + r.target)
+      }
     }
   });
 
@@ -113,7 +117,7 @@ export function parseBOKData(bokJSON, v) {
     if (allNodes[i].parents.length == 0) {
       rootNode = allNodes[i];
       rootNodeCode = allNodes[i].code.toLowerCase();
-      // console.log("ROOT NODE " + i + " code " + rootNodeCode)
+      console.log("ROOT NODE " + i + " code " + rootNodeCode)
       break;
     }
   }
@@ -320,14 +324,14 @@ export async function visualizeBOKData(url, version) {
   await getBoKData(url);
   allVersions = Object.keys(fullBoK);
 
-  // Sort all Versions chronollogically 
+  // Sort all Versions chronollogically  - current first one
   allVersions.sort((a, b) => {
-    if (a == 'current')
-      return 1;
-    if (b == 'current')
-      return 0;
+    if (a == 'current' || b == 'current')
+      return -1;
     return parseInt(b.split('v')[1]) - parseInt(a.split('v')[1]);
   });
+
+  console.log("ALL VERSIONS " + allVersions)
 
   allVersions.forEach(v => {
     fullParsedBoK[v] = parseBOKData(fullBoK[v], v);
@@ -429,7 +433,7 @@ export function displayConcept(d) {
 
   window.history.pushState({}, "Find In Bok", "/" + d.data.code);
 
-// `<h2>Superconcept:</h2><div id='bokParentNode'><a style='color: #007bff; font-weight: 400; cursor: pointer;' class='concept-name' id='sc-${d.parent.data.code}' onclick='browseToConcept(\"${d.parent.data.code}\")'>[${d.parent.data.code}] ${d.parent.data.name}</a> </div><br>`
+  // `<h2>Superconcept:</h2><div id='bokParentNode'><a style='color: #007bff; font-weight: 400; cursor: pointer;' class='concept-name' id='sc-${d.parent.data.code}' onclick='browseToConcept(\"${d.parent.data.code}\")'>[${d.parent.data.code}] ${d.parent.data.name}</a> </div><br>`
 
   var pNode = document.createElement("p");
   pNode.innerHTML = `Permalink: <a href= 'https://ucgis-bok.web.app/${d.data.code}' target='blank'> https://ucgis-bok.web.app/${d.data.code}</a> <a id='permalink' style='color: #007bff; font-weight: 400; cursor: pointer;' onclick='navigator.clipboard.writeText(\"https://ucgis-bok.web.app/${d.data.code}\"); document.getElementById("permalink").innerHTML = "Copied!"; document.getElementById("urilink").innerHTML = "Copy"'>  Copy </a>`;
