@@ -326,9 +326,12 @@ export async function visualizeBOKData(url, version) {
 
   // Sort all Versions chronollogically  - current first one
   allVersions.sort((a, b) => {
-    if (a == 'current' || b == 'current')
+    if (a == 'current')
       return -1;
-    return parseInt(b.split('v')[1]) - parseInt(a.split('v')[1]);
+    else if (b == 'current')
+      return 1;
+    else
+      return parseInt(b.split('v')[1]) - parseInt(a.split('v')[1]);
   });
 
   console.log("ALL VERSIONS " + allVersions)
@@ -436,10 +439,15 @@ export function displayConcept(d) {
   // `<h2>Superconcept:</h2><div id='bokParentNode'><a style='color: #007bff; font-weight: 400; cursor: pointer;' class='concept-name' id='sc-${d.parent.data.code}' onclick='browseToConcept(\"${d.parent.data.code}\")'>[${d.parent.data.code}] ${d.parent.data.name}</a> </div><br>`
 
   var pNode = document.createElement("p");
-  pNode.innerHTML = `Permalink: <a href= 'https://ucgis-bok.web.app/${d.data.code}' target='blank'> https://ucgis-bok.web.app/${d.data.code}</a> <a id='permalink' style='color: #007bff; font-weight: 400; cursor: pointer;' onclick='navigator.clipboard.writeText(\"https://ucgis-bok.web.app/${d.data.code}\"); document.getElementById("permalink").innerHTML = "Copied!"; document.getElementById("urilink").innerHTML = "Copy"'>  Copy </a>`;
+  var iconCopy = '&nbsp;&nbsp;<i class=&#39;material-icons&#39;>content_copy</i> Copy';
+
+  // TODO: ADD TO BELOW THIS FOR LTB LINK  -----    document.getElementById("permalink").innerHTML = "&nbsp;&nbsp;Copied!";    --- document.getElementById("urilink").innerHTML = "${iconCopy}"
+  pNode.innerHTML = `Permalink: <a href= 'https://ucgis-bok.web.app/${d.data.code}' target='blank'> <i class="material-icons">open_in_new</i> https://ucgis-bok.web.app/${d.data.code}</a> <a id='permalink' style='color: #007bff; font-weight: 400; cursor: pointer;' onclick='navigator.clipboard.writeText(\"https://ucgis-bok.web.app/${d.data.code}\");  document.getElementById("permalink").innerHTML = "&nbsp;&nbsp;Copied!"; '>&nbsp;&nbsp; <i class='material-icons'>content_copy</i> Copy </a>`;
+  /*  
+   TODO: UNCOMMENT THIS FOR LTB LINK
   if (d.data.uri) {
-    pNode.innerHTML += `<br> LTB Link: <a href= '${d.data.uri}' target='blank'> ${d.data.uri}</a>  <a id='urilink' style='color: #007bff; font-weight: 400; cursor: pointer;' onclick='navigator.clipboard.writeText("${d.data.uri}"); document.getElementById("urilink").innerHTML = "Copied!"; document.getElementById("permalink").innerHTML = "Copy"'>  Copy </a>`;
-  }
+      pNode.innerHTML += `<br> LTB Link: <a href= '${d.data.uri}' target='blank'> <i class="material-icons">open_in_new</i> ${d.data.uri}</a>  <a id='urilink' style='color: #007bff; font-weight: 400; cursor: pointer;' onclick='navigator.clipboard.writeText("${d.data.uri}"); document.getElementById("urilink").innerHTML = "&nbsp;&nbsp;Copied!"; document.getElementById("permalink").innerHTML = "${iconCopy}"'>&nbsp;&nbsp; <i class='material-icons'>content_copy</i> Copy </a>`;
+    } */
   mainNode.appendChild(pNode);
 
   mainNode.appendChild(titleNode);
@@ -455,7 +463,7 @@ export function displayConcept(d) {
   //display description of concept
   var descriptionNode = document.createElement("div");
   if (d.data.description != null) {
-    var headline = "<h2>Description:</h2>";
+    var headline = "<h2>Description</h2>";
     var currentTxt = "<div id='bokCurrentDescription'>" + d.data.description + "</div><br>";
     descriptionNode.innerHTML = headline + currentTxt;
   } else
