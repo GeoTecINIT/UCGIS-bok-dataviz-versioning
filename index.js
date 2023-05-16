@@ -143,7 +143,7 @@ export function parseBOKData(bokJSON, v) {
 
 export function browseToConcept(code) {
   if (code) {
-    console.log("browseToConcept " + code);
+    // console.log("browseToConcept " + code);
     var node = d3.select('#node-' + code.toLowerCase()).data();
     // Can not find the node, find in old versions
     if (node.length == 0) {
@@ -534,7 +534,7 @@ export function displayVersions(domElement, conceptCode) {
   allVersions.forEach(v => {
 
     if (versionsCodes[v].includes(conceptCode.toLowerCase())) {
-      text += `<li> <a style='color: #007bff; font-weight: 400; cursor: pointer;' onclick='visualizeBoKVersion(\"${v}\")' >${v} (${fullBoK[v].creationYear})</a></li>`;
+      text += `<li> <a style='color: #007bff; font-weight: 400; cursor: pointer;' onclick='visualizeBoKVersion(\"${v}\")' >${v} (${fullBoK[v].updateDate})</a></li>`;
     } else {
       text += `<li> ${v} (${fullBoK[v].creationYear}) (Concept does not exist in this version)</li>`;
     }
