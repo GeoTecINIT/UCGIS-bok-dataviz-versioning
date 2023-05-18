@@ -22,7 +22,7 @@ let view;
 let codesColors = [];
 
 let selectedNodes = [];
-let allNodes = [];
+let allNodes = {};
 let rootNodeCode = '';
 let fullBoK = {};
 let fullParsedBoK = {};
@@ -30,6 +30,7 @@ let versionsCodes = [];
 
 let allVersions = [];
 let currSelCode = '';
+let currVersion = 'current';
 
 const COLOR_STROKE_SELECTED = 'black';
 const COLOR_STROKE_DEFAULT = '#090909';
@@ -37,7 +38,8 @@ const COLOR_STROKE_RESULTS = '#080808';
 
 export function parseBOKData(bokJSON, v) {
   // loop all nodes
-  allNodes = [];
+  // if (v == "current")
+  allNodes[v] = [];
   versionsCodes[v] = [];
 
   bokJSON.concepts.forEach((n, index) => {
@@ -55,7 +57,8 @@ export function parseBOKData(bokJSON, v) {
       contributors: [],
       sourceDocuments: []
     };
-    allNodes.push(node);
+    //  if (v == "current")
+    allNodes[v].push(node);
     versionsCodes[v].push(n.code.toLowerCase());
 
     if (!codesColors.includes(n.code.substring(0, 2)))
@@ -69,10 +72,10 @@ export function parseBOKData(bokJSON, v) {
   bokJSON.relations.forEach(r => {
     if (r.name === Relationtype.SUBCONCEPT) {
       if (r.target != r.source) {
-        if (!allNodes[r.target].children.includes(allNodes[r.source]))
-          allNodes[r.target].children.push(allNodes[r.source]);
-        if (!allNodes[r.source].parents.includes(allNodes[r.target]))
-          allNodes[r.source].parents.push(allNodes[r.target]);
+        if (!allNodes[v][r.target].children.includes(allNodes[v][r.source]))
+          allNodes[v][r.target].children.push(allNodes[v][r.source]);
+        if (!allNodes[v][r.source].parents.includes(allNodes[v][r.target]))
+          allNodes[v][r.source].parents.push(allNodes[v][r.target]);
       } else {
         console.log('Loop relation for concept: ' + r.target)
       }
@@ -82,7 +85,7 @@ export function parseBOKData(bokJSON, v) {
   // add skills
   bokJSON.skills.forEach(skill => {
     skill.concepts.forEach(skillconcept => {
-      allNodes[skillconcept].demonstrableSkills.push(skill.name);
+      allNodes[v][skillconcept].demonstrableSkills.push(skill.name);
     });
   });
 
@@ -90,7 +93,7 @@ export function parseBOKData(bokJSON, v) {
   if (bokJSON.contributors) {
     bokJSON.contributors.forEach(con => {
       con.concepts.forEach(c => {
-        allNodes[c].contributors.push({
+        allNodes[v][c].contributors.push({
           name: con.name,
           description: con.description,
           url: con.url
@@ -102,7 +105,7 @@ export function parseBOKData(bokJSON, v) {
   // add source documents
   bokJSON.references.forEach(ref => {
     ref.concepts.forEach(c => {
-      allNodes[c].sourceDocuments.push({
+      allNodes[v][c].sourceDocuments.push({
         name: ref.name,
         description: ref.description,
         url: ref.url
@@ -113,21 +116,21 @@ export function parseBOKData(bokJSON, v) {
   // find root node
   let rootNode;
 
-  for (let i = 0; i < allNodes.length; i++) {
-    if (allNodes[i].parents.length == 0) {
-      rootNode = allNodes[i];
-      rootNodeCode = allNodes[i].code.toLowerCase();
-      console.log("ROOT NODE " + i + " code " + rootNodeCode)
+  for (let i = 0; i < allNodes[v].length; i++) {
+    if (allNodes[v][i].parents.length == 0) {
+      rootNode = allNodes[v][i];
+      rootNodeCode = allNodes[v][i].code.toLowerCase();
+      console.log("Version " + v + " root node " + i + " code " + rootNodeCode)
       break;
     }
   }
 
-  // fullBoK['current'] = allNodes;
+  // fullBoK['current'] = allNodes[v];
 
   return rootNode;
 
   /*   // TODO: Avoid circular dependencies - keep only 3 levels
-    allNodes[0].children.forEach(ch => {
+    allNodes[v][0].children.forEach(ch => {
       ch.children.forEach(ch1 => {
         ch1.children.forEach(ch2 => {
           ch2.children = [];
@@ -136,14 +139,13 @@ export function parseBOKData(bokJSON, v) {
     });
 
     // return clean root
-    return allNodes[0]; */
+    return allNodes[v][0];*/
 
 }
 
 
 export function browseToConcept(code) {
   if (code) {
-    // console.log("browseToConcept " + code);
     var node = d3.select('#node-' + code.toLowerCase()).data();
     // Can not find the node, find in old versions
     if (node.length == 0) {
@@ -159,7 +161,7 @@ export function browseToConcept(code) {
       if (foundInOld) {
         currSelCode = code.toLowerCase();
         visualizeBoKVersion(versionToDisplay);
-        displayMsgOldV(code, versionToDisplay);
+        displayMsgObsoleteV(code, versionToDisplay);
         // else navigate to root and show error
       } else {
         navigateToRoot();
@@ -190,6 +192,8 @@ export async function getBoKData(url) {
 }
 
 export function visualizeBoKVersion(version) {
+
+  currVersion = version;
 
   var bokData = fullParsedBoK[version];
 
@@ -350,14 +354,14 @@ export async function visualizeBOKData(url, version) {
 
 }
 
-export function searchInBoK(string, searchCode, searchName, searchDes, searchSkills) {
+export function searchInBoK(string, searchCode, searchName, searchDes, searchSkills, searchSD) {
   cleanSearchInBOK();
   cleanTextInfo();
 
   let searchInputFieldDoc = string.trim().toLowerCase();
   if (searchInputFieldDoc != "" && searchInputFieldDoc != " ") {
 
-    let results = allNodes.filter((n) => {
+    let results = allNodes[currVersion].filter((n) => {
       let filterBool = searchCode && n.code.toLowerCase().includes(searchInputFieldDoc) ||
         searchName && n.name.toLowerCase().includes(searchInputFieldDoc) ||
         searchDes && n.description.toLowerCase().includes(searchInputFieldDoc);
@@ -370,8 +374,15 @@ export function searchInBoK(string, searchCode, searchName, searchDes, searchSki
           }
         });
       }
-      return filterBool;
+      if (searchSD && !filterBool) {
+        n.sourceDocuments.forEach(s => {
+          if (s.name.toLowerCase().includes(searchInputFieldDoc)) {
+            filterBool = true;
+          }
+        });
 
+      }
+      return filterBool;
     });
 
     results.forEach(n => {
@@ -406,6 +417,8 @@ export function navigateToRoot() {
   displayConcept(root.data()[0]);
 }
 
+window.navigateToRoot = navigateToRoot;
+
 export function cleanTextInfo() {
   var mainNode = document.getElementById(TEMPLATE_IdText)
   mainNode.innerHTML = "";
@@ -417,15 +430,21 @@ export function displayError(code) {
   mainNode.innerHTML = "<p style='color:#c60606;'> Concept " + code + " does not exist. Use the links or the graph to navigate to a valid one. </p> " + mainNode.innerHTML;
 }
 
-export function displayMsgOldV(code, version) {
-  console.log("Concept exists in older version, " + code + " version " + version);
+export function displayMsgObsoleteV(code, version) {
+  console.log("Warning, this is an old version of the Concept exists in older version, " + code + " version " + version);
   var mainNode = document.getElementById(TEMPLATE_IdText);
-  mainNode.innerHTML = "<p style='color:#c60606;'> Concept " + code + " exist in the " + version + " old version. </p> " + mainNode.innerHTML;
+  if (!mainNode.innerHTML.includes('Warning: this is an obsolete BoK concept'))
+    mainNode.innerHTML = "<p style='color:#c60606;'> Warning: this is an obsolete BoK concept - this concept is no longer present in the <a style='color: #007bff; font-weight: 400; cursor: pointer;' onclick='navigateToRoot(); visualizeBoKVersion(\"current\")' >current</a> version. </p> " + mainNode.innerHTML;
+}
+
+export function displayMsgOldV() {
+  console.log("Warning, this is an old version the Bok ");
+  var mainNode = document.getElementById(TEMPLATE_IdText);
+  mainNode.innerHTML = "<p style='color:orange'> Warning: this is an old version of this BoK concept; see “\Versioning”\ below for more recent version(s) </p> " + mainNode.innerHTML;
 }
 
 //displays all available content for the currently focussed concept in the description box:
 export function displayConcept(d) {
-
   currSelCode = d.data.code.toLowerCase();
   var mainNode = document.getElementById(TEMPLATE_IdText)
   mainNode.innerHTML = "";
@@ -491,6 +510,15 @@ export function displayConcept(d) {
   displayVersions(infoNode, d.data.code);
   mainNode.appendChild(infoNode);
 
+  // show warnings if concept is obsolete and old version
+  if (currVersion != 'current') {
+    if (!versionsCodes['current'].includes(d.data.code.toLowerCase())) {
+      displayMsgObsoleteV(d.data.code, currVersion);
+    } else {
+      displayMsgOldV();
+    }
+  }
+
 };
 
 //displays a list of nodes such as children
@@ -534,9 +562,12 @@ export function displayVersions(domElement, conceptCode) {
   allVersions.forEach(v => {
 
     if (versionsCodes[v].includes(conceptCode.toLowerCase())) {
-      text += `<li> <a style='color: #007bff; font-weight: 400; cursor: pointer;' onclick='visualizeBoKVersion(\"${v}\")' >${v} (${fullBoK[v].updateDate})</a></li>`;
+      if (v == currVersion) // if current version is the same, make it not clickable
+        text += `<li> <strong> <i class="material-icons">east</i> ${v} (${fullBoK[v].updateDate})</strong></li>`;
+      else
+        text += `<li> <a style='color: #007bff; font-weight: 400; cursor: pointer;' onclick='visualizeBoKVersion(\"${v}\")' >${v} (${fullBoK[v].updateDate})</a></li>`;
     } else {
-      text += `<li> ${v} (${fullBoK[v].creationYear}) (Concept does not exist in this version)</li>`;
+      text += `<li> ${v} (${fullBoK[v].updateDate}) (Concept does not exist in this version)</li>`;
     }
 
   });
