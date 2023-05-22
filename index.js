@@ -142,7 +142,11 @@ export function parseBOKData(bokJSON, v) {
     return allNodes[v][0];*/
 
 }
+export function getCurrSelCode() {
+  return currSelCode;
+}
 
+window.getCurrSelCode = getCurrSelCode;
 
 export function browseToConcept(code) {
   if (code) {
@@ -178,8 +182,15 @@ export function browseToConcept(code) {
     navigateToRoot();
   }
 }
-
 window.browseToConcept = browseToConcept;
+
+export function zoomToCode(code) {
+  var node = d3.select('#node-' + code.toLowerCase()).data();
+  if (node.length > 0) {
+    zoom(node[0]);
+  }
+}
+window.zoomToCode = zoomToCode;
 
 export async function getBoKData(url) {
   return new Promise(resolve => {
@@ -563,7 +574,7 @@ export function displayVersions(domElement, conceptCode) {
 
     if (versionsCodes[v].includes(conceptCode.toLowerCase())) {
       if (v == currVersion) // if current version is the same, make it not clickable
-        text += `<li> <strong> <i class="material-icons">east</i> ${v} (${fullBoK[v].updateDate})</strong></li>`;
+        text += `<li> <strong> <i class="material-icons">east</i> You are viewing: ${v} (${fullBoK[v].updateDate})</strong></li>`;
       else
         text += `<li> <a style='color: #007bff; font-weight: 400; cursor: pointer;' onclick='visualizeBoKVersion(\"${v}\")' >${v} (${fullBoK[v].updateDate})</a></li>`;
     } else {
