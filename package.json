@@ -4,7 +4,7 @@
   "description": "UCGIS-bok-dataviz is an script to parse UCGIS BoK and visualize it in a circle packing d3 layout",
   "main": "index.js",
   "dependencies": {
-    "d3": "^5.9.2"
+    "d3": "^7.8.2"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -22,5 +22,14 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/GeoTecINIT/UCGIS-find-in-bok-dataviz-versioning"
-  }
+      },
+      "exports": "./index.js",
+      "files": [
+        "src",
+        "*.md"
+      ],
+      "engines": {
+        "node": " >=14.13.1 || >=16.0.0"
+      }
+
 }
