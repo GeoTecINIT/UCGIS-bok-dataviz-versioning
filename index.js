@@ -47,6 +47,7 @@ export function parseBOKData(bokJSON, v) {
       name: n.name,
       code: n.code,
       description: n.description,
+      content: n.content,
       selfAssesment: n.selfAssesment,
       uri: n.link,
       id: index,
@@ -500,6 +501,17 @@ export function displayConcept(d) {
     descriptionNode.innerHTML = "";
 
   mainNode.appendChild(descriptionNode);
+
+  //display content of concept
+  var contentNode = document.createElement("div");
+  if (d.data.content != null && d.data.content != "") {
+    var headline = "<h2>Content</h2>";
+    var currentTxt = "<div id='bokCurrentContent'>" + d.data.content + "</div><br>";
+    contentNode.innerHTML = headline + currentTxt;
+  } else
+    contentNode.innerHTML = "";
+
+  mainNode.appendChild(contentNode);
 
   if (d.parent != null) {
     var parentNode = document.createElement("div");

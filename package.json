@@ -1,7 +1,7 @@
 {
-  "name": "@eo4geo/find-in-bok-dataviz",
-  "version": "2.2.12",
-  "description": "EO4GEO-bok-dataviz-v2 is an script to parse EO4GEO BoK and visualize it in a circle packing d3 layout",
+  "name": "@ucgis/find-in-bok-dataviz",
+  "version": "1.0.0",
+  "description": "UCGIS-bok-dataviz is an script to parse UCGIS BoK and visualize it in a circle packing d3 layout",
   "main": "index.js",
   "dependencies": {
     "d3": "^5.9.2"
@@ -15,13 +15,12 @@
     "bok",
     "Body of Knowledge",
     "circle packing",
-    "eo4geo"
+    "ucgis"
   ],
-  "author": "Claudia Perez <clperez@uji.es>",
-  "contributors": ["Aida <amuriach@uji.es>"],
+  "author": "Aida <amuriach@uji.es>",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/GeoTecINIT/EO4GEO-find-in-bok-dataviz-versioning"
+    "url": "https://github.com/GeoTecINIT/UCGIS-find-in-bok-dataviz-versioning"
   }
 }

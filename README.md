@@ -1,48 +1,44 @@
-# EO4GEO-bok-dataviz-v2
+# UCGIS-bok-dataviz
 
-EO4GEO-bok-dataviz-v2 is an script to parse a json-ld file and visualize it in a circle packing d3 layout.
+UCGIS-bok-dataviz is an script to parse a json-ld file and visualize it in a circle packing d3 layout.
 
 ## Installation
 
 Using npm: 
 
 ```bash
-npm i @eo4geo/find-in-bok-dataviz
+npm i @ucgis/find-in-bok-dataviz
 ```
 
 ## Usage
 
-Place a div and give it an id.
-If you want to show also the textual information, place a div and give it an id.
+Place a div and give it this id: 'graph'.
+If you want to show also the textual information, place a div and give this id: 'textInfo'.
 
 ```html
-<div id="bubbles"> </div>
+<div id="graph"> </div>
 <div id="textInfo"></div>
 ```
 
-In Javascript call the function visualizeBOKData(svgId, url, textId, numVersion, oldVersion, textToAlert, yearCurrentVersion, yearVersion)
+In Javascript call the function visualizeBOKData(url, numVersion)
 
 
-- svgID : is the id you gave to the element in the HTML you want to display the graph
 - url : is the location BD
-- textID : is the id you gave to the div for the textual information
-- numVersion : the number of the current version from database
-- oldVersion : the number of an old version from database
-- textToAlert : 'orage' or 'red' for alert color
+- numVersion : the number of the version you want to visualize
 
 
 ```javascript
-import * as bok from '@eo4geo/find-in-bok-dataviz';
+import * as bok from '@ucgis/find-in-bok-dataviz';
 [...]
 
-bok.visualizeBOKData('#bubbles', 'https://eo4geo-uji.firebaseio.com/', '#textInfo', 1, , 1, 'orage', '2019', '2016') // will render the graphical view and the textual view from the version 1 in database
+bok.visualizeBOKData('https://ucgis-bok-default-rtdb.firebaseio.com/', 1) // will render the graphical view and the textual view from the version 1 in database
 
 ```
 
 Other functions
 
 ```javascript
-import * as bok from '@eo4geo/find-in-bok-dataviz';
+import * as bok from '@ucgis/find-in-bok-dataviz';
 [...]
 
 selectedNodes = bok.searchInBoK(searchText); // returns an array of concepts matching the searchText string
