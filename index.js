@@ -9,6 +9,7 @@ var Relationtype = {
   DEMONSTRATES: "demonstrates",
   SUBCONCEPT: "is subconcept of",
   SIMILARTO: "is similar to",
+  RELATEDTO: "is related to",
   PREREQUISITEOF: "is prerequisite of"
 };
 
@@ -56,7 +57,8 @@ export function parseBOKData(bokJSON, v) {
       parents: [],
       demonstrableSkills: [],
       contributors: [],
-      sourceDocuments: []
+      sourceDocuments: [],
+      relatedTo: []
     };
     //  if (v == "current")
     allNodes[v].push(node);
@@ -78,6 +80,13 @@ export function parseBOKData(bokJSON, v) {
         if (!allNodes[v][r.source].parents.includes(allNodes[v][r.target]))
           allNodes[v][r.source].parents.push(allNodes[v][r.target]);
       } else {
+        console.log('Loop relation for concept: ' + r.target)
+      }
+    } if (r.name === Relationtype.RELATEDTO) {
+       if (r.target != r.source) {
+         if (!allNodes[v][r.target].relatedTo.includes(allNodes[v][r.source]))
+          allNodes[v][r.target].relatedTo.push(allNodes[v][r.source]);
+       } else {
         console.log('Loop relation for concept: ' + r.target)
       }
     }
@@ -118,7 +127,7 @@ export function parseBOKData(bokJSON, v) {
   let rootNode;
 
   for (let i = 0; i < allNodes[v].length; i++) {
-    if (allNodes[v][i].parents.length == 0) {
+    if (allNodes[v][i].parents.length == 0 && allNodes[v][i].children.length > 0) {
       rootNode = allNodes[v][i];
       rootNodeCode = allNodes[v][i].code.toLowerCase();
       console.log("Version " + v + " root node " + i + " code " + rootNodeCode)
@@ -482,14 +491,14 @@ export function displayConcept(d) {
   mainNode.appendChild(pNode);
 
   mainNode.appendChild(titleNode);
-  if (d.data.selfAssesment != " ") {
+/*   if (d.data.selfAssesment != " ") {
     var statusNode = document.createElement("div");
     statusNode.innerHTML = d.data.selfAssesment;
     let statusText = document.createElement("div");
     statusText.innerHTML = 'Status: ' + statusNode.innerText;
     statusText.style = "margin-bottom: 10px;";
     mainNode.appendChild(statusText);
-  }
+  } */
 
   //display description of concept
   var descriptionNode = document.createElement("div");
@@ -526,8 +535,8 @@ export function displayConcept(d) {
 
   d.data.demonstrableSkills && d.data.demonstrableSkills.length > 0 ? displayTextList(d.data.demonstrableSkills, infoNode, "Skills") : null;
 
-  d.data.contributors && d.data.contributors.length > 0 ? displayLinksList(d.data.contributors, infoNode, "Contributors") : null;
-  d.data.sourceDocuments && d.data.sourceDocuments.length > 0 ? displayLinksList(d.data.sourceDocuments, infoNode, "Source Documents") : null;
+  d.data.contributors && d.data.contributors.length > 0 ? displayLinksList(d.data.contributors, infoNode, "Contributors", "bokcontributors") : null;
+  d.data.sourceDocuments && d.data.sourceDocuments.length > 0 ? displayLinksList(d.data.sourceDocuments, infoNode, "Source Documents", "boksource") : null;
 
   // display versions
   displayVersions(infoNode, d.data.code);
@@ -557,7 +566,7 @@ export function displayChildren(array, domElement, headline) {
 };
 
 // displays links such as contributors and sourceDocuments
-export function displayLinksList(array, domElement, headline) {
+export function displayLinksList(array, domElement, headline, id) {
 
   var text = "<h2>" + headline + " [" + array.length + "] </h2><div><ul>";
   array.forEach(l => {
