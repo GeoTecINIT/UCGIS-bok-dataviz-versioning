@@ -86,6 +86,8 @@ export function parseBOKData(bokJSON, v) {
        if (r.target != r.source) {
          if (!allNodes[v][r.target].relatedTo.includes(allNodes[v][r.source]))
           allNodes[v][r.target].relatedTo.push(allNodes[v][r.source]);
+         if (!allNodes[v][r.source].relatedTo.includes(allNodes[v][r.target]))
+          allNodes[v][r.source].relatedTo.push(allNodes[v][r.target]);
        } else {
         console.log('Loop relation for concept: ' + r.target)
       }
@@ -481,13 +483,11 @@ export function displayConcept(d) {
   var pNode = document.createElement("p");
   var iconCopy = '&nbsp;&nbsp;<i class=&#39;material-icons&#39;>content_copy</i> Copy';
 
-  // TODO: ADD TO BELOW THIS FOR LTB LINK  -----    document.getElementById("permalink").innerHTML = "&nbsp;&nbsp;Copied!";    --- document.getElementById("urilink").innerHTML = "${iconCopy}"
   pNode.innerHTML = `Permalink: <a href= 'https://ucgis-bok.web.app/${d.data.code}' target='blank'> <i class="material-icons">open_in_new</i> https://ucgis-bok.web.app/${d.data.code}</a> <a id='permalink' style='color: #007bff; font-weight: 400; cursor: pointer;' onclick='navigator.clipboard.writeText(\"https://ucgis-bok.web.app/${d.data.code}\");  document.getElementById("permalink").innerHTML = "&nbsp;&nbsp;Copied!"; '>&nbsp;&nbsp; <i class='material-icons'>content_copy</i> Copy </a>`;
-  /*  
-   TODO: UNCOMMENT THIS FOR LTB LINK
+   
   if (d.data.uri) {
-      pNode.innerHTML += `<br> LTB Link: <a href= '${d.data.uri}' target='blank'> <i class="material-icons">open_in_new</i> ${d.data.uri}</a>  <a id='urilink' style='color: #007bff; font-weight: 400; cursor: pointer;' onclick='navigator.clipboard.writeText("${d.data.uri}"); document.getElementById("urilink").innerHTML = "&nbsp;&nbsp;Copied!"; document.getElementById("permalink").innerHTML = "${iconCopy}"'>&nbsp;&nbsp; <i class='material-icons'>content_copy</i> Copy </a>`;
-    } */
+      pNode.innerHTML += `<br> LTB Backlink: <a href= '${d.data.uri}' target='blank'> <i class="material-icons">open_in_new</i> ${d.data.uri}</a>  <a id='urilink' style='color: #007bff; font-weight: 400; cursor: pointer;' onclick='navigator.clipboard.writeText("${d.data.uri}"); document.getElementById("urilink").innerHTML = "&nbsp;&nbsp;Copied!"; document.getElementById("permalink").innerHTML = "${iconCopy}"'>&nbsp;&nbsp; <i class='material-icons'>content_copy</i> Copy </a>`;
+    }
   mainNode.appendChild(pNode);
 
   mainNode.appendChild(titleNode);
@@ -502,7 +502,7 @@ export function displayConcept(d) {
 
   //display description of concept
   var descriptionNode = document.createElement("div");
-  if (d.data.description != null) {
+  if (d.data.description != null && d.data.description != ' ') {
     var headline = "<h2>Description</h2>";
     var currentTxt = "<div id='bokCurrentDescription'>" + d.data.description + "</div><br>";
     descriptionNode.innerHTML = headline + currentTxt;
@@ -531,7 +531,10 @@ export function displayConcept(d) {
   var infoNode = document.createElement("div");
 
   //display subconcepts (if any):
-  d.children && d.children.length > 0 ? displayChildren(d.children, infoNode, "Subconcepts") : null;
+  d.data.children && d.data.children.length > 0 ? displayChildren(d.data.children, infoNode, "Subconcepts") : null;
+
+  // display related relation
+  d.data.relatedTo && d.data.relatedTo.length > 0 ? displayChildren(d.data.relatedTo, infoNode, "Related") : null;
 
   d.data.demonstrableSkills && d.data.demonstrableSkills.length > 0 ? displayTextList(d.data.demonstrableSkills, infoNode, "Skills") : null;
 
@@ -555,11 +558,10 @@ export function displayConcept(d) {
 
 //displays a list of nodes such as children
 export function displayChildren(array, domElement, headline) {
-
-  array.sort((a, b) => a.data.code.localeCompare(b.data.code));
+  array.sort((a, b) => a.code.localeCompare(b.code));
   var text = "<h2>" + headline + " [" + array.length + "] </h2><div><ul>";
   array.forEach(c => {
-    text += "<a style='color: #007bff; font-weight: 400; cursor: pointer;' class='concept-name' id='sc-" + c.data.code + "' onclick='browseToConcept(\"" + c.data.code + "\")'>[" + c.data.code + '] ' + c.data.name + "</a> <br>";
+    text += "<a style='color: #007bff; font-weight: 400; cursor: pointer;' class='concept-name' id='sc-" + c.code + "' onclick='browseToConcept(\"" + c.code + "\")'>[" + c.code + '] ' + c.name + "</a> <br>";
   });
   text += "</ul></div>";
   domElement.innerHTML += text;
