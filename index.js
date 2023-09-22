@@ -15,12 +15,30 @@ var Relationtype = {
 
 const TEMPLATE_IdGraph = 'graph';
 const TEMPLATE_IdText = 'textInfo';
+// const TEMPLATE_IdAbs = 'bokabstract';
+const TEMPLATE_IdInt = 'bokintroduction';
+const TEMPLATE_IdDes = 'bokdescription';
+const TEMPLATE_IdRel = 'bokrelations';
+const TEMPLATE_IdRef = 'bokreferences';
+const TEMPLATE_IdSki = 'bokskills';
+const TEMPLATE_IdVer = 'bokversioning';
+// const TEMPLATE_IdRelN = 'bokrelationsnum';
+const TEMPLATE_IdRefN = 'bokreferencesnum';
+const TEMPLATE_IdSkiN = 'bokskillsnum';
+const TEMPLATE_IdVerN = 'bokversioningnum';
+const TEM_IdKey = 'keywordsInfo';
+const TEM_IdKeyT = 'keywordsInfoTitle';
+
+
+
+// const TEMPLATE_IdAcc = 'bokaccordion';
 
 const width = 932;
 const height = width;
 let view;
 
-let codesColors = [];
+let codesColors = ['AM', 'CP', 'CV', 'DA', 'DC', 'DM', 'FC', 'GS', 'KE', 'PD', 'UC'];
+let colorsHEX = ['#9999F8', '#AEB9C8', '#F19E70', '#4EAEEA', '#FBE7A3', '#B1CF95', '#F19E9C', '#439798', '#E4EEDC', '#A3C1E3', '#e4e4e4'];
 
 let selectedNodes = [];
 let allNodes = {};
@@ -39,7 +57,6 @@ const COLOR_STROKE_RESULTS = '#080808';
 
 export function parseBOKData(bokJSON, v) {
   // loop all nodes
-  // if (v == "current")
   allNodes[v] = [];
   versionsCodes[v] = [];
 
@@ -47,29 +64,26 @@ export function parseBOKData(bokJSON, v) {
     var node = {
       name: n.name,
       code: n.code,
+      introduction: n.introduction,
       description: n.description,
-      content: n.content,
+      explanation: n.explanation,
       selfAssesment: n.selfAssesment,
       uri: n.link,
       id: index,
       value: 1,
       children: [],
       parents: [],
+      keywords: [],
       demonstrableSkills: [],
       contributors: [],
       sourceDocuments: [],
       relatedTo: []
     };
-    //  if (v == "current")
     allNodes[v].push(node);
     versionsCodes[v].push(n.code.toLowerCase());
 
-    if (!codesColors.includes(n.code.substring(0, 2)))
-      codesColors.push(n.code.substring(0, 2))
-
   });
 
-  console.log(codesColors)
 
   // add children - parent
   bokJSON.relations.forEach(r => {
@@ -79,50 +93,64 @@ export function parseBOKData(bokJSON, v) {
           allNodes[v][r.target].children.push(allNodes[v][r.source]);
         if (!allNodes[v][r.source].parents.includes(allNodes[v][r.target]))
           allNodes[v][r.source].parents.push(allNodes[v][r.target]);
-      } else {
-        console.log('Loop relation for concept: ' + r.target)
-      }
+      } 
     } if (r.name === Relationtype.RELATEDTO) {
-       if (r.target != r.source) {
-         if (!allNodes[v][r.target].relatedTo.includes(allNodes[v][r.source]))
+      if (r.target != r.source) {
+        if (!allNodes[v][r.target].relatedTo.includes(allNodes[v][r.source]))
           allNodes[v][r.target].relatedTo.push(allNodes[v][r.source]);
-         if (!allNodes[v][r.source].relatedTo.includes(allNodes[v][r.target]))
+        if (!allNodes[v][r.source].relatedTo.includes(allNodes[v][r.target]))
           allNodes[v][r.source].relatedTo.push(allNodes[v][r.target]);
-       } else {
-        console.log('Loop relation for concept: ' + r.target)
       }
     }
   });
-
   // add skills
   bokJSON.skills.forEach(skill => {
-    skill.concepts.forEach(skillconcept => {
-      allNodes[v][skillconcept].demonstrableSkills.push(skill.name);
-    });
+    if (skill.concepts && skill.concepts.length > 0) {
+      skill.concepts.forEach(skillconcept => {
+        allNodes[v][skillconcept].demonstrableSkills.push(skill.name ? skill.name : '');
+      });
+    }
   });
 
   // add contributors
   if (bokJSON.contributors) {
     bokJSON.contributors.forEach(con => {
-      con.concepts.forEach(c => {
-        allNodes[v][c].contributors.push({
-          name: con.name,
-          description: con.description,
-          url: con.url
+      if (con.concepts && con.concepts.length > 0) {
+        con.concepts.forEach(c => {
+          allNodes[v][c].contributors.push({
+            name: con.name ? con.name : '',
+            description: con.description ? con.description : '',
+            url: con.url ? con.url : ''
+          });
         });
-      });
+      }
     });
   }
 
   // add source documents
   bokJSON.references.forEach(ref => {
-    ref.concepts.forEach(c => {
-      allNodes[v][c].sourceDocuments.push({
-        name: ref.name,
-        description: ref.description,
-        url: ref.url
+    if (ref.concepts && ref.concepts.length > 0) {
+      ref.concepts.forEach(c => {
+        allNodes[v][c].sourceDocuments.push({
+          name: ref.name ? ref.name : '',
+          description: ref.description ? ref.description : '',
+          url: ref.url ? ref.url : ''
+        });
       });
-    });
+    }
+  });
+
+  // add keywords documents
+  bokJSON.keywords.forEach(ref => {
+    if (ref.concepts && ref.concepts.length > 0) {
+      ref.concepts.forEach(c => {
+        allNodes[v][c].keywords.push({
+          name: ref.name ? ref.name : '',
+          description: ref.description ? ref.description : '',
+          color: ref.color ? ref.color : '#8FBDAF'
+        });
+      });
+    }
   });
 
   // find root node
@@ -132,26 +160,11 @@ export function parseBOKData(bokJSON, v) {
     if (allNodes[v][i].parents.length == 0 && allNodes[v][i].children.length > 0) {
       rootNode = allNodes[v][i];
       rootNodeCode = allNodes[v][i].code.toLowerCase();
-      console.log("Version " + v + " root node " + i + " code " + rootNodeCode)
       break;
     }
   }
 
-  // fullBoK['current'] = allNodes[v];
-
   return rootNode;
-
-  /*   // TODO: Avoid circular dependencies - keep only 3 levels
-    allNodes[v][0].children.forEach(ch => {
-      ch.children.forEach(ch1 => {
-        ch1.children.forEach(ch2 => {
-          ch2.children = [];
-        })
-      })
-    });
-
-    // return clean root
-    return allNodes[v][0];*/
 
 }
 export function getCurrSelCode() {
@@ -195,6 +208,7 @@ export function browseToConcept(code) {
   }
 }
 window.browseToConcept = browseToConcept;
+window.searchInBoKKeyword = searchInBoKKeyword;
 
 export function zoomToCode(code) {
   var node = d3.select('#node-' + code.toLowerCase()).data();
@@ -227,15 +241,6 @@ export function visualizeBoKVersion(version) {
       .sum(d => d.value)
       .sort((a, b) => b.value - a.value));
 
-  /*     var color = d3.scaleLinear()
-        .domain([0, 5])
-        .range(["hsl(152,80%,80%)", "hsl(228,30%,40%)"])
-        .interpolate(d3.interpolateHcl); */
-
-  // var color = d3.interpolateRainbow();
-
-  //  ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"]
-
   var root = pack(bokData);
 
   let focus = root;
@@ -252,14 +257,10 @@ export function visualizeBoKVersion(version) {
   const node = svg.append("g")
     .selectAll("circle")
     .data(root)
-    // .data(root.descendants().slice(1))  // If we need to remove first element, in case root is duplicated
     .join("circle")
     .attr("fill", d => {
       let code = codesColors.indexOf(d.data.code.substring(0, 2));
-      while (code >= d3.schemeSet3.length)
-        code = code - d3.schemeSet3.length;
-
-      return d3.schemeSet3[code];
+      return colorsHEX[code];
     })
     .attr("stroke", COLOR_STROKE_DEFAULT)
     .attr("stroke-width", "0.2px")
@@ -292,7 +293,7 @@ export function visualizeBoKVersion(version) {
         maxLabelLength = 13,
         final = [arr[0]];
       for (var i = 1, j = 0; i < arr.length; i++) {
-        (final[j].length + arr[i].length < maxLabelLength) ? final[j] += ' ' + arr[i]: (j++, final[j] = arr[i]);
+        (final[j].length + arr[i].length < maxLabelLength) ? final[j] += ' ' + arr[i] : (j++, final[j] = arr[i]);
       }
       final.forEach((t, i) => d3.select(this).append('tspan').text(t).attr('dy', i ? '1em' : -0.5 * (j - 1) + 'em').attr('x', 0).attr('text-anchor', 'middle').attr('class', 'tspan' + i));
     })
@@ -377,7 +378,7 @@ export async function visualizeBOKData(url, version) {
 
 }
 
-export function searchInBoK(string, searchCode, searchName, searchDes, searchSkills, searchSD) {
+export function searchInBoK(string, searchCode, searchName, searchKey, searchDes, searchSkills, searchSD) {
   cleanSearchInBOK();
   cleanTextInfo();
 
@@ -389,6 +390,14 @@ export function searchInBoK(string, searchCode, searchName, searchDes, searchSki
         searchName && n.name.toLowerCase().includes(searchInputFieldDoc) ||
         searchDes && n.description.toLowerCase().includes(searchInputFieldDoc);
 
+      // search for coincidences in keywords
+      if (searchKey && !filterBool) {
+        n.keywords.forEach(s => {
+          if (s.name.toLowerCase().includes(searchInputFieldDoc)) {
+            filterBool = true;
+          }
+        });
+      }
       // search for coincidences in demonstrableSkills
       if (searchSkills && !filterBool) {
         n.demonstrableSkills.forEach(s => {
@@ -405,6 +414,41 @@ export function searchInBoK(string, searchCode, searchName, searchDes, searchSki
         });
 
       }
+      return filterBool;
+    });
+
+    results.forEach(n => {
+      d3.select('#node-' + n.code.toLowerCase())
+        .attr("stroke-width", "2px")
+        .attr("stroke", COLOR_STROKE_RESULTS);
+    });
+
+    selectedNodes = results;
+
+    return selectedNodes;
+  } else {
+    browseToConcept(rootNodeCode);
+    // navigateToRoot();
+    return [];
+  }
+}
+
+export function searchInBoKKeyword(string) {
+  cleanSearchInBOK();
+  cleanTextInfo();
+
+  let searchInputFieldDoc = string.trim().toLowerCase();
+  if (searchInputFieldDoc != "" && searchInputFieldDoc != " ") {
+
+
+    let results = allNodes[currVersion].filter((n) => {
+      let filterBool = false;
+      // search for coincidences in keywords
+      n.keywords.forEach(s => {
+        if (s.name.toLowerCase().includes(searchInputFieldDoc.toLowerCase())) {
+          filterBool = true;
+        }
+      });
       return filterBool;
     });
 
@@ -483,67 +527,112 @@ export function displayConcept(d) {
   var pNode = document.createElement("p");
   var iconCopy = '&nbsp;&nbsp;<i class=&#39;material-icons&#39;>content_copy</i> Copy';
 
-  pNode.innerHTML = `Permalink: <a href= 'https://ucgis-bok.web.app/${d.data.code}' target='blank'> <i class="material-icons">open_in_new</i> https://ucgis-bok.web.app/${d.data.code}</a> <a id='permalink' style='color: #007bff; font-weight: 400; cursor: pointer;' onclick='navigator.clipboard.writeText(\"https://ucgis-bok.web.app/${d.data.code}\");  document.getElementById("permalink").innerHTML = "&nbsp;&nbsp;Copied!"; '>&nbsp;&nbsp; <i class='material-icons'>content_copy</i> Copy </a>`;
-   
-  if (d.data.uri) {
-      pNode.innerHTML += `<br> LTB Backlink: <a href= '${d.data.uri}' target='blank'> <i class="material-icons">open_in_new</i> ${d.data.uri}</a>  <a id='urilink' style='color: #007bff; font-weight: 400; cursor: pointer;' onclick='navigator.clipboard.writeText("${d.data.uri}"); document.getElementById("urilink").innerHTML = "&nbsp;&nbsp;Copied!"; document.getElementById("permalink").innerHTML = "${iconCopy}"'>&nbsp;&nbsp; <i class='material-icons'>content_copy</i> Copy </a>`;
-    }
+  pNode.innerHTML = `Permalink: <a href= 'https://gistbok-topics.ucgis.org/${d.data.code}' target='blank'> <i class="material-icons">open_in_new</i> https://gistbok-topics.ucgis.org/${d.data.code}</a> <a id='permalink' style='color: #007bff; font-weight: 400; cursor: pointer;' onclick='navigator.clipboard.writeText(\"https://gistbok-bok.ucgis.org/${d.data.code}\");  document.getElementById("permalink").innerHTML = "&nbsp;&nbsp;Copied!"; '>&nbsp;&nbsp; <i class='material-icons'>content_copy</i> Copy </a>`;
+
   mainNode.appendChild(pNode);
 
   mainNode.appendChild(titleNode);
-/*   if (d.data.selfAssesment != " ") {
-    var statusNode = document.createElement("div");
-    statusNode.innerHTML = d.data.selfAssesment;
-    let statusText = document.createElement("div");
-    statusText.innerHTML = 'Status: ' + statusNode.innerText;
-    statusText.style = "margin-bottom: 10px;";
-    mainNode.appendChild(statusText);
-  } */
 
-  //display description of concept
-  var descriptionNode = document.createElement("div");
-  if (d.data.description != null && d.data.description != ' ') {
-    var headline = "<h2>Description</h2>";
-    var currentTxt = "<div id='bokCurrentDescription'>" + d.data.description + "</div><br>";
-    descriptionNode.innerHTML = headline + currentTxt;
-  } else
-    descriptionNode.innerHTML = "";
+  var lNode = document.createElement("p");
+  if (d.data.uri) {
+    /*  <a id='urilink' style='color: #007bff; font-weight: 400; cursor: pointer;' onclick='navigator.clipboard.writeText("${d.data.uri}"); document.getElementById("urilink").innerHTML = "&nbsp;&nbsp;Copied!"; document.getElementById("permalink").innerHTML = "${iconCopy}"'>&nbsp;&nbsp; <i class='material-icons'>content_copy</i> Copy </a> */
+    lNode.innerHTML = `<a href= '${d.data.uri}' target='blank' style="font-size: smaller">  View this topic in the Living Textbook tool.<i class="material-icons">open_in_new</i></a>`;
+  }
+  mainNode.appendChild(lNode);
 
-  mainNode.appendChild(descriptionNode);
 
-  //display content of concept
-  var contentNode = document.createElement("div");
-  if (d.data.content != null && d.data.content != "") {
-    var headline = "<h2>Content</h2>";
-    var currentTxt = "<div id='bokCurrentContent'>" + d.data.content + "</div><br>";
-    contentNode.innerHTML = headline + currentTxt;
-  } else
-    contentNode.innerHTML = "";
+  var keyNode = document.getElementById(TEM_IdKeyT);
+  keyNode.innerHTML = '';
 
-  mainNode.appendChild(contentNode);
+  //clean previous keywords
+  Array.from(Array(15).keys()).forEach(i => {
+    var keyNode = document.getElementById(TEM_IdKey + '' + i);
+    keyNode.innerHTML = '';
+  })
 
-  if (d.parent != null) {
-    var parentNode = document.createElement("div");
-    parentNode.innerHTML = `<h2>Superconcept:</h2><div id='bokParentNode'><a style='color: #007bff; font-weight: 400; cursor: pointer;' class='concept-name' id='sc-${d.parent.data.code}' onclick='browseToConcept(\"${d.parent.data.code}\")'>[${d.parent.data.code}] ${d.parent.data.name}</a> </div><br>`;
-    mainNode.appendChild(parentNode);
+  if (d.data.keywords.length > 0) {
+    var keyNode = document.getElementById(TEM_IdKeyT);
+    keyNode.style['font-style'] = 'italic';
+    var txt = '<span style="font-weight: 600;" >Keywords: </span>';
+    keyNode.innerHTML = txt;
+
+    d.data.keywords.forEach((k, i) => {
+      var keyNode = document.getElementById(TEM_IdKey + '' + i);
+      keyNode.style['font-style'] = 'italic';
+      keyNode.innerHTML = k.name;
+    })
   }
 
-  var infoNode = document.createElement("div");
+  var absNode = document.createElement("p");
+  // var absNode = document.getElementById(TEMPLATE_IdAbs);
+  //display description of concept
+  // var descriptionNode = document.createElement("div");
+  if (d.data.description != null && d.data.description != ' ') {
+    var currentTxt = "<div id='bokCurrentDescription'>" + d.data.description + "</div>";
+    absNode.innerHTML = currentTxt;
+  } else
+    absNode.innerHTML = "<No short description available>";
+
+  mainNode.appendChild(absNode);
+
+  var absNode = document.getElementById(TEMPLATE_IdInt);
+
+  //display intro of concept
+  var intNode = document.getElementById(TEMPLATE_IdInt);
+  // var contentNode = document.createElement("div");
+  if (d.data.introduction != null && d.data.introduction != " ") {
+    var currentTxt = "<div id='bokCurrentContentIntr'>" + d.data.introduction + "</div><br>";
+    intNode.innerHTML = currentTxt;
+  } else
+    intNode.innerHTML = "";
+
+  //display content of concept
+  var desNode = document.getElementById(TEMPLATE_IdDes);
+  if (d.data.explanation != null && d.data.explanation != " ") {
+    var cleanExpl = d.data.explanation.replaceAll('<li><a href="#', '<li><a id="#a')
+    var currentTxt = "<div id='bokCurrentContent'>" + cleanExpl + "</div><br>";
+    desNode.innerHTML = currentTxt;
+  } else
+    desNode.innerHTML = "No content available";
+
+  //display relations of concept
+  var relNode = document.getElementById(TEMPLATE_IdRel);
+  if (d.parent != null) {
+    var currentTxt = `<h2>Supertopic:</h2><div id='bokParentNode'><a style='color: #007bff; font-weight: 400; cursor: pointer;' class='concept-name' id='sc-${d.parent.data.code}' onclick='browseToConcept(\"${d.parent.data.code}\")'>[${d.parent.data.code}] ${d.parent.data.name}</a> </div><br>`;
+    relNode.innerHTML = currentTxt;
+  } else {
+    relNode.innerHTML = "";
+  }
 
   //display subconcepts (if any):
-  d.data.children && d.data.children.length > 0 ? displayChildren(d.data.children, infoNode, "Subconcepts") : null;
+  d.data.children && d.data.children.length > 0 && d.data.code == 'UCGIS' ? displayChildren(d.data.children, relNode, "Knowledge areas") : null;
+  d.data.children && d.data.children.length > 0 && d.data.code != 'UCGIS' ? displayChildren(d.data.children, relNode, "Subtopics") : null;
 
   // display related relation
-  d.data.relatedTo && d.data.relatedTo.length > 0 ? displayChildren(d.data.relatedTo, infoNode, "Related") : null;
+  d.data.relatedTo && d.data.relatedTo.length > 0 ? displayChildren(d.data.relatedTo, relNode, "Related topics") : null;
 
-  d.data.demonstrableSkills && d.data.demonstrableSkills.length > 0 ? displayTextList(d.data.demonstrableSkills, infoNode, "Skills") : null;
+  //display skills of concept
+  var skillNode = document.getElementById(TEMPLATE_IdSki);
+  var skillNodeN = document.getElementById(TEMPLATE_IdSkiN);
+  skillNode.innerHTML = "";
+  skillNodeN.innerHTML = "&nbsp; [" + d.data.demonstrableSkills.length + "]";
+  d.data.demonstrableSkills && d.data.demonstrableSkills.length > 0 ? displayTextList(d.data.demonstrableSkills, skillNode, "Learning Objectives") : null;
 
-  d.data.contributors && d.data.contributors.length > 0 ? displayLinksList(d.data.contributors, infoNode, "Contributors", "bokcontributors") : null;
-  d.data.sourceDocuments && d.data.sourceDocuments.length > 0 ? displayLinksList(d.data.sourceDocuments, infoNode, "Source Documents", "boksource") : null;
+  //display refs of concept
+  var refsNode = document.getElementById(TEMPLATE_IdRef);
+  var refsNNode = document.getElementById(TEMPLATE_IdRefN);
+  refsNode.innerHTML = "";
+  refsNNode.innerHTML = "&nbsp; [" + d.data.sourceDocuments.length + "]";
+  d.data.sourceDocuments && d.data.sourceDocuments.length > 0 ? displayLinksList(d.data.sourceDocuments, refsNode, "References", "boksource") : null;
 
+  //display versions of concept
+  var verNode = document.getElementById(TEMPLATE_IdVer);
+  var verNNode = document.getElementById(TEMPLATE_IdVerN);
+  verNode.innerHTML = "";
+  verNNode.innerHTML = "&nbsp; [" + allVersions.length + "]";
   // display versions
-  displayVersions(infoNode, d.data.code);
-  mainNode.appendChild(infoNode);
+  displayVersions(verNode, d.data.code);
+
 
   // show warnings if concept is obsolete and old version
   if (currVersion != 'current') {
@@ -569,10 +658,9 @@ export function displayChildren(array, domElement, headline) {
 
 // displays links such as contributors and sourceDocuments
 export function displayLinksList(array, domElement, headline, id) {
-
-  var text = "<h2>" + headline + " [" + array.length + "] </h2><div><ul>";
+  var text = "<ul>";
   array.forEach(l => {
-    text += "<a style='color: #007bff; font-weight: 400; cursor: pointer;' class='concept-name' href='" + l.url + "' target='_blank' >" + l.name + "</a> <br>";
+    text += "<li>" + l.name + " </li>";
   });
   text += "</ul></div>";
   domElement.innerHTML += text;
@@ -580,8 +668,7 @@ export function displayLinksList(array, domElement, headline, id) {
 
 // displays list such as skills
 export function displayTextList(array, domElement, headline) {
-
-  var text = "<h2>" + headline + " [" + array.length + "] </h2><div><ul>";
+  var text = "<ul>";
   array.forEach(l => {
     text += "<li>" + l + "</li>";
   });
@@ -591,8 +678,7 @@ export function displayTextList(array, domElement, headline) {
 
 // displays list such as skills
 export function displayVersions(domElement, conceptCode) {
-
-  var text = "<h2> Versioning [" + allVersions.length + "] </h2><div><ul>";
+  var text = "";
   allVersions.forEach(v => {
 
     if (versionsCodes[v].includes(conceptCode.toLowerCase())) {
