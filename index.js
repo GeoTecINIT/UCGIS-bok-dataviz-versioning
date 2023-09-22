@@ -527,7 +527,7 @@ export function displayConcept(d) {
   var pNode = document.createElement("p");
   var iconCopy = '&nbsp;&nbsp;<i class=&#39;material-icons&#39;>content_copy</i> Copy';
 
-  pNode.innerHTML = `Permalink: <a href= 'https://gistbok-topics.ucgis.org/${d.data.code}' target='blank'> <i class="material-icons">open_in_new</i> https://gistbok-topics.ucgis.org/${d.data.code}</a> <a id='permalink' style='color: #007bff; font-weight: 400; cursor: pointer;' onclick='navigator.clipboard.writeText(\"https://gistbok-bok.ucgis.org/${d.data.code}\");  document.getElementById("permalink").innerHTML = "&nbsp;&nbsp;Copied!"; '>&nbsp;&nbsp; <i class='material-icons'>content_copy</i> Copy </a>`;
+  pNode.innerHTML = `Permalink: <a href= 'https://gistbok-topics.ucgis.org/${d.data.code}' target='blank'> <i class="material-icons">open_in_new</i> https://gistbok-topics.ucgis.org/${d.data.code}</a> <a id='permalink' style='color: #007bff; font-weight: 400; cursor: pointer;' onclick='navigator.clipboard.writeText(\"https://gistbok-topics.ucgis.org/${d.data.code}\");  document.getElementById("permalink").innerHTML = "&nbsp;&nbsp;Copied!"; '>&nbsp;&nbsp; <i class='material-icons'>content_copy</i> Copy </a>`;
 
   mainNode.appendChild(pNode);
 
